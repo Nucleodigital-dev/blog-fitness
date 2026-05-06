@@ -1,10 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/middleware'
+import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // refresh user sessions
-  const supabaseResponse = createClient(request)
-  return supabaseResponse
+  // refresh user sessions and protect /admin
+  return await updateSession(request)
 }
 
 export const config = {
