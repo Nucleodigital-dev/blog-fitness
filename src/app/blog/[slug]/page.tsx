@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Info, AlertTriangle, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
+import type { Metadata } from "next";
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { marked } from "marked";
 import Image from "next/image";
+import { absoluteUrl, organizationName, siteName, siteUrl } from "@/lib/site";
+import { formatArticleTitle } from "@/lib/text";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +15,81 @@ type BlogPostProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ lang?: string | string[] }>;
 };
+
+type FaqItem = {
+  q: string;
+  a: string;
+};
+
+type ArticleBlock = {
+  type?: string;
+  title?: string;
+  content?: string;
+  isHtml?: boolean;
+  faqs?: FaqItem[] | null;
+};
+
+function stripMarkup(value: string) {
+  return value
+    .replace(/<[^>]*>?/gm, " ")
+    .replace(/[*_#>`[\]()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseBlocks(content: string | null | undefined): ArticleBlock[] {
+  if (!content || !content.trim().startsWith("[")) return [];
+
+  try {
+    const blocks = JSON.parse(content);
+    return Array.isArray(blocks) ? blocks : [];
+  } catch {
+    return [];
+  }
+}
+
+function getPlainArticleText(content: string | null | undefined) {
+  const blocks = parseBlocks(content);
+
+  if (blocks.length > 0) {
+    return stripMarkup(
+      blocks
+        .map((block) => {
+          const faqText = block.faqs?.map((faq) => `${faq.q} ${faq.a}`).join(" ") || "";
+          return `${block.title || ""} ${block.content || ""} ${faqText}`;
+        })
+        .join(" ")
+    );
+  }
+
+  return stripMarkup(content || "");
+}
+
+function getMetaDescription(content: string | null | undefined) {
+  const text = getPlainArticleText(content);
+  if (!text) return "";
+  return text.length > 157 ? `${text.substring(0, 157)}...` : text;
+}
+
+function getReadingTime(content: string | null | undefined, lang: "pt" | "en") {
+  const words = getPlainArticleText(content).split(/\s+/).filter(Boolean).length;
+  const minutes = Math.max(1, Math.ceil(words / 200));
+  return lang === "en" ? `${minutes} min read` : `Leitura: ${minutes} min`;
+}
+
+function getArticleImage(image: string | null | undefined) {
+  return image ? absoluteUrl(image) : absoluteUrl("/logo.png");
+}
+
+function getReferenceLines(blocks: ArticleBlock[]) {
+  const referenceBlock = blocks.find((block) => block.type === "references" && block.content);
+  if (!referenceBlock?.content) return [];
+
+  return referenceBlock.content
+    .split(/\n+/)
+    .map((line) => stripMarkup(line).replace(/^[-\d.]+\s*/, ""))
+    .filter(Boolean);
+}
 
 const englishUnavailableContent = `## English version coming soon
 
@@ -81,7 +159,10 @@ function hasUsableEnglish(article: any) {
 }
 
 function getLocalizedTitle(article: any, isEn: boolean, hasEnglish: boolean) {
-  return isEn && hasEnglish && article.title_en ? article.title_en : article.title_pt;
+  return formatArticleTitle(
+    isEn && hasEnglish && article.title_en ? article.title_en : article.title_pt,
+    isEn ? "en" : "pt"
+  );
 }
 
 function getLocalizedContent(article: any, isEn: boolean, hasEnglish: boolean) {
@@ -89,7 +170,7 @@ function getLocalizedContent(article: any, isEn: boolean, hasEnglish: boolean) {
   return article.content_pt;
 }
 
-export async function generateMetadata({ params, searchParams }: BlogPostProps) {
+export async function generateMetadata({ params, searchParams }: BlogPostProps): Promise<Metadata> {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   const resolvedParams = await params;
@@ -97,19 +178,49 @@ export async function generateMetadata({ params, searchParams }: BlogPostProps) 
   const lang = resolveLang(resolvedSearchParams);
   const isEn = lang === "en";
 
-  const { data } = await supabase.from('articles').select('title_pt, title_en, content_pt, content_en').eq('slug', resolvedParams.slug).single();
+  const { data } = await supabase.from('articles').select('slug, title_pt, title_en, content_pt, content_en, cover_image, cover_alt, created_at').eq('slug', resolvedParams.slug).single();
   const article = data as any;
   if (!article) return { title: "Not Found" };
 
   const hasEnglish = hasUsableEnglish(article);
   const title = getLocalizedTitle(article, isEn, hasEnglish);
   const content = getLocalizedContent(article, isEn, hasEnglish);
-  const cleanDescription = content ? content.replace(/<[^>]*>?/gm, '').replace(/[*_#>`]/g, '').replace(/\s+/g, ' ').trim() : "";
-  const description = cleanDescription ? cleanDescription.substring(0, 160) + "..." : "";
+  const description = getMetaDescription(content);
+  const canonicalPath = `/blog/${article.slug}`;
+  const image = getArticleImage(article.cover_image);
 
   return {
     title: `${title} | Saúde em Foco`,
-    description
+    description,
+    alternates: {
+      canonical: canonicalPath,
+      languages: {
+        "pt-BR": canonicalPath,
+        "en-US": `${canonicalPath}?lang=en`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: absoluteUrl(canonicalPath),
+      siteName,
+      images: [
+        {
+          url: image,
+          alt: article.cover_alt || title,
+        },
+      ],
+      locale: isEn ? "en_US" : "pt_BR",
+      type: "article",
+      publishedTime: article.created_at || undefined,
+      authors: [organizationName],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -169,9 +280,10 @@ export default async function BlogPost({
   const coverAlt = article.cover_alt || title;
   const catName = isEn && article.cat_name_en ? article.cat_name_en : article.cat_name_pt;
   const contentRaw = getLocalizedContent(article, isEn, hasEnglish);
+  const readingTime = getReadingTime(contentRaw, lang);
   
   let isJsonBlocks = false;
-  let blocksArray: any[] = [];
+  let blocksArray: ArticleBlock[] = [];
   try {
     if (contentRaw && contentRaw.trim().startsWith('[')) {
       blocksArray = JSON.parse(contentRaw);
@@ -208,6 +320,90 @@ export default async function BlogPost({
       .limit(2);
     related = relatedAnyData || [];
   }
+
+  const canonicalUrl = absoluteUrl(`/blog/${slug}`);
+  const articleDescription = getMetaDescription(contentRaw);
+  const articleImage = getArticleImage(article.cover_image);
+  const faqBlocks = blocksArray.filter((block) => block.type === "faq" && block.faqs?.length);
+  const faqItems = faqBlocks.flatMap((block) => block.faqs || []);
+  const citations = getReferenceLines(blocksArray);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: organizationName,
+        url: siteUrl,
+        logo: absoluteUrl("/logo.png"),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${canonicalUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Inicio",
+            item: siteUrl,
+          },
+          ...(catName
+            ? [
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: catName,
+                  item: absoluteUrl(`/?category=${article.cat_slug || article.category_id}`),
+                },
+              ]
+            : []),
+          {
+            "@type": "ListItem",
+            position: catName ? 3 : 2,
+            name: title,
+            item: canonicalUrl,
+          },
+        ],
+      },
+      {
+        "@type": "BlogPosting",
+        "@id": `${canonicalUrl}#article`,
+        headline: title,
+        description: articleDescription,
+        image: articleImage,
+        datePublished: article.created_at,
+        dateModified: article.created_at,
+        author: {
+          "@type": "Organization",
+          name: organizationName,
+          url: siteUrl,
+        },
+        publisher: {
+          "@id": `${siteUrl}/#organization`,
+        },
+        mainEntityOfPage: canonicalUrl,
+        inLanguage: isEn ? "en-US" : "pt-BR",
+        articleSection: catName || undefined,
+        citation: citations.length > 0 ? citations : undefined,
+      },
+      ...(faqItems.length > 0
+        ? [
+            {
+              "@type": "FAQPage",
+              "@id": `${canonicalUrl}#faq`,
+              mainEntity: faqItems.map((faq) => ({
+                "@type": "Question",
+                name: stripMarkup(faq.q),
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: stripMarkup(faq.a),
+                },
+              })),
+            },
+          ]
+        : []),
+    ],
+  };
 
   return (
     <>
@@ -261,6 +457,21 @@ export default async function BlogPost({
           color: #ef4444;
           font-weight: bold;
         }
+
+        .block-references {
+          background: #f8fafc;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 24px;
+          font-size: 1rem;
+          line-height: 1.65;
+        }
+
+        .block-references p:last-child,
+        .block-references ul:last-child,
+        .block-references ol:last-child {
+          margin-bottom: 0;
+        }
         
         .faq-details {
           background: var(--card-bg);
@@ -275,6 +486,10 @@ export default async function BlogPost({
           box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
       `}} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       <article lang={isEn ? "en" : "pt-BR"} style={{ maxWidth: 860, margin: '0 auto', paddingTop: 40, paddingBottom: 80 }}>
         
@@ -289,7 +504,7 @@ export default async function BlogPost({
                 <ChevronRight size={14} />
               </>
             )}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} /> Leitura: 8 min</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} /> {readingTime}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={14} /> Atualizado: {new Date(article.created_at).toLocaleDateString('pt-BR')}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 6, fontWeight: 600 }}><BookOpen size={14} /> Conteúdo Educativo</span>
           </div>
@@ -304,7 +519,7 @@ export default async function BlogPost({
           {quickAnswerBlock && (
             <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 32 }}>
               {/* Omitimos marcações HTML cruas do excerpt, apenas pegamos as primeiras palavras */}
-              {quickAnswerBlock.content.replace(/<[^>]*>?/gm, '').substring(0, 200)}...
+              {(quickAnswerBlock.content || "").replace(/<[^>]*>?/gm, '').substring(0, 200)}...
             </p>
           )}
         </div>
@@ -322,7 +537,7 @@ export default async function BlogPost({
               <Info size={28} />
               <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Resumo em 30 segundos</h3>
             </div>
-            <div dangerouslySetInnerHTML={{ __html: quickAnswerBlock.isHtml ? quickAnswerBlock.content : marked(quickAnswerBlock.content) }} style={{ fontSize: '1.25rem', lineHeight: 1.8 }} />
+            <div dangerouslySetInnerHTML={{ __html: quickAnswerBlock.isHtml ? (quickAnswerBlock.content || "") : marked(quickAnswerBlock.content || "") }} style={{ fontSize: '1.25rem', lineHeight: 1.8 }} />
           </div>
         )}
 
@@ -360,7 +575,7 @@ export default async function BlogPost({
                          <AlertTriangle size={28} />
                          <h2 style={{ fontSize: '1.75rem', color: '#991b1b', margin: 0 }}>{block.title}</h2>
                        </div>
-                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? block.content : marked(block.content) }} />
+                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : marked(block.content || "") }} />
                      </div>
                    );
                  }
@@ -373,7 +588,7 @@ export default async function BlogPost({
                          <CheckCircle2 size={28} />
                          <h2 style={{ fontSize: '1.75rem', color: '#0f766e', margin: 0 }}>{block.title}</h2>
                        </div>
-                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? block.content : marked(block.content) }} />
+                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : marked(block.content || "") }} />
                      </div>
                    );
                  }
@@ -410,7 +625,7 @@ export default async function BlogPost({
                  return (
                    <div key={i} id={sectionId} style={{ marginBottom: 48 }}>
                      <SectionHeader preTitle={preTitle} title={block.title} />
-                     <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? block.content : marked(block.content) }} />
+                     <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : marked(block.content || "") }} />
                    </div>
                  );
               })}
@@ -428,7 +643,7 @@ export default async function BlogPost({
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
             {related.map(rel => {
-                const relTitle = isEn && rel.title_en ? rel.title_en : rel.title_pt;
+                const relTitle = formatArticleTitle(isEn && rel.title_en ? rel.title_en : rel.title_pt, lang);
                 return (
                   <Link href={`/blog/${rel.slug}?lang=${lang}`} key={rel.id} style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', background: 'var(--card-bg)' }} className="related-card-premium">
                     {rel.cover_image && (

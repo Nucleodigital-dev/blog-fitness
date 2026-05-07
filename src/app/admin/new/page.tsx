@@ -24,18 +24,18 @@ const BLOCKS_DB: Record<string, any> = {
 const TEMPLATES_DB: Record<string, any> = {
   symptom: {
     name: "Dor ou Sintoma",
-    required: ["intro", "quick_answer", "who_is_for", "red_flags", "causes", "what_to_do_now", "what_to_avoid", "faq"],
-    optional: ["checklist", "exercise_routine", "references"]
+    required: ["intro", "quick_answer", "who_is_for", "red_flags", "causes", "what_to_do_now", "what_to_avoid", "faq", "references"],
+    optional: ["checklist", "exercise_routine"]
   },
   guide: {
     name: "Guia Prático / Treino",
-    required: ["intro", "quick_answer", "who_is_for", "exercise_routine", "what_to_avoid", "faq"],
-    optional: ["checklist", "red_flags", "references"]
+    required: ["intro", "quick_answer", "who_is_for", "exercise_routine", "what_to_avoid", "faq", "references"],
+    optional: ["checklist", "red_flags"]
   },
   comparison: {
     name: "Comparativo",
-    required: ["intro", "quick_answer", "comparison_table", "faq"],
-    optional: ["what_to_avoid", "references"]
+    required: ["intro", "quick_answer", "comparison_table", "faq", "references"],
+    optional: ["what_to_avoid"]
   }
 };
 

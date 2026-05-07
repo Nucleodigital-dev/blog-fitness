@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { formatArticleTitle } from "@/lib/text";
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +103,7 @@ export default async function Home({ searchParams }: { searchParams: { lang?: st
               {featuredArticles[0].cover_image && (
                 <Image src={featuredArticles[0].cover_image} alt={featuredArticles[0].cover_alt || (isEn && featuredArticles[0].title_en ? featuredArticles[0].title_en : featuredArticles[0].title_pt)} fill style={{ objectFit: 'cover', zIndex: 0 }} />
               )}
-              <h2>{isEn && featuredArticles[0].title_en ? featuredArticles[0].title_en : featuredArticles[0].title_pt}</h2>
+              <h2>{formatArticleTitle(isEn && featuredArticles[0].title_en ? featuredArticles[0].title_en : featuredArticles[0].title_pt, lang)}</h2>
               <p>{new Date(featuredArticles[0].created_at).toLocaleDateString(isEn ? 'en-US' : 'pt-BR')}</p>
             </Link>
           )}
@@ -112,7 +113,7 @@ export default async function Home({ searchParams }: { searchParams: { lang?: st
                 {article.cover_image && (
                   <Image src={article.cover_image} alt={article.cover_alt || (isEn && article.title_en ? article.title_en : article.title_pt)} fill style={{ objectFit: 'cover', zIndex: 0 }} />
                 )}
-                <h2>{isEn && article.title_en ? article.title_en : article.title_pt}</h2>
+                <h2>{formatArticleTitle(isEn && article.title_en ? article.title_en : article.title_pt, lang)}</h2>
               </Link>
             ))}
           </div>
@@ -124,7 +125,7 @@ export default async function Home({ searchParams }: { searchParams: { lang?: st
           {categorySlug && <h2 style={{ marginBottom: 32, fontSize: '2rem' }}>Últimos Artigos</h2>}
           <div className="article-grid">
             {regularArticles.map((article) => {
-              const title = isEn && article.title_en ? article.title_en : article.title_pt;
+              const title = formatArticleTitle(isEn && article.title_en ? article.title_en : article.title_pt, lang);
               const content = isEn && article.content_en ? article.content_en : article.content_pt;
               let excerpt = "";
               if (content) {
