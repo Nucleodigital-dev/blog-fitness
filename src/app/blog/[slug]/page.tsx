@@ -9,7 +9,6 @@ import { formatArticleTitle } from "@/lib/text";
 import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
 import { getArticleSupplement } from "@/lib/article-supplements";
 import { ArticleEngagement } from "@/components/ArticleEngagement";
-import { LanguagePreferenceLink } from "@/components/LanguagePreferenceLink";
 
 export const dynamic = "force-dynamic";
 
@@ -118,9 +117,6 @@ const uiCopy = {
     related: "Próximos passos recomendados",
     readLater: "Leia depois",
     readArticle: "Acessar artigo",
-    switchLabel: "Idioma do artigo",
-    portuguese: "PT",
-    english: "EN",
     preTitle: {
       intro: "Contexto",
       causes: "Diagnóstico rápido",
@@ -140,9 +136,6 @@ const uiCopy = {
     related: "Recommended next steps",
     readLater: "Read later",
     readArticle: "Read article",
-    switchLabel: "Article language",
-    portuguese: "PT",
-    english: "EN",
     preTitle: {
       intro: "Context",
       causes: "Quick diagnosis",
@@ -462,7 +455,7 @@ export default async function BlogPost({
         {/* Premium Hero */}
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', marginBottom: 24, fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            <Link href="/" style={{ color: 'var(--primary)', fontWeight: 600 }}>Início</Link>
+            <Link href="/" style={{ color: 'var(--primary)', fontWeight: 600 }}>{copy.home}</Link>
             <ChevronRight size={14} />
             {catName && (
               <>
@@ -471,14 +464,9 @@ export default async function BlogPost({
               </>
             )}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} /> {readingTime}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={14} /> Atualizado: {new Date(article.created_at).toLocaleDateString('pt-BR')}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 6, fontWeight: 600 }}><BookOpen size={14} /> Conteúdo Educativo</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={14} /> {copy.updated}: {new Date(article.created_at).toLocaleDateString('pt-BR')}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 6, fontWeight: 600 }}><BookOpen size={14} /> {copy.educational}</span>
           </div>
-
-          <nav aria-label={copy.switchLabel} style={{ display: 'inline-flex', gap: 4, border: '1px solid var(--border)', borderRadius: 999, padding: 4, background: 'var(--card-bg)', marginBottom: 24 }}>
-            <LanguagePreferenceLink href={`/blog/${slug}?lang=pt`} language="pt" style={{ padding: '6px 12px', borderRadius: 999, fontWeight: 800, color: !isEn ? 'white' : 'var(--primary)', background: !isEn ? 'var(--primary)' : 'transparent', textDecoration: 'none' }}>{copy.portuguese}</LanguagePreferenceLink>
-            <LanguagePreferenceLink href={`/blog/${slug}?lang=en`} language="en" style={{ padding: '6px 12px', borderRadius: 999, fontWeight: 800, color: isEn ? 'white' : 'var(--primary)', background: isEn ? 'var(--primary)' : 'transparent', textDecoration: 'none' }}>{copy.english}</LanguagePreferenceLink>
-          </nav>
 
           <ArticleEngagement
             article={{

@@ -5,7 +5,6 @@ import { getContentExcerpt } from "@/lib/content-utils";
 import { getAllArticles, getCategories, getSitePage } from "@/lib/content";
 import type { Article } from "@/lib/content-types";
 import { formatArticleTitle } from "@/lib/text";
-import { LanguagePreferenceLink } from "@/components/LanguagePreferenceLink";
 import { FavoriteCategoryButton, ReadingMemory } from "@/components/ReadingMemory";
 
 export const dynamic = "force-dynamic";
@@ -80,16 +79,6 @@ export default async function Home({
   return (
     <>
       <div className="hero" style={{ marginBottom: categorySlug ? 48 : 64 }}>
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
-          <div className="lang-toggle">
-            <LanguagePreferenceLink href={`?lang=pt${categorySlug ? `&category=${categorySlug}` : ""}`} language="pt">
-              <button className={!isEn ? "active" : ""}>PT-BR</button>
-            </LanguagePreferenceLink>
-            <LanguagePreferenceLink href={`?lang=en${categorySlug ? `&category=${categorySlug}` : ""}`} language="en">
-              <button className={isEn ? "active" : ""}>EN-US</button>
-            </LanguagePreferenceLink>
-          </div>
-        </div>
         {categorySlug ? (
           <h1>{categoryName}</h1>
         ) : (

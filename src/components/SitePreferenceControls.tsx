@@ -1,6 +1,7 @@
 "use client";
 
 import { Languages, Moon, Sun } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LANGUAGE_KEY,
@@ -20,17 +21,21 @@ function getStoredLanguage(): SiteLanguage {
 }
 
 export function SitePreferenceControls() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [theme, setTheme] = useState<SiteTheme>("system");
   const [language, setLanguage] = useState<SiteLanguage>("pt");
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      const urlLanguage = searchParams.get("lang");
       setTheme(getStoredTheme());
-      setLanguage(getStoredLanguage());
+      setLanguage(urlLanguage === "en" || urlLanguage === "pt" ? urlLanguage : getStoredLanguage());
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [searchParams]);
 
   const nextTheme = theme === "dark" ? "light" : "dark";
 
@@ -42,8 +47,12 @@ export function SitePreferenceControls() {
 
   const updateLanguage = () => {
     const nextLanguage: SiteLanguage = language === "pt" ? "en" : "pt";
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    nextParams.set("lang", nextLanguage);
     localStorage.setItem(LANGUAGE_KEY, nextLanguage);
     setLanguage(nextLanguage);
+    router.push(`${pathname}?${nextParams.toString()}`, { scroll: false });
     dispatchPreferenceUpdate();
   };
 

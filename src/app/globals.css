@@ -958,29 +958,6 @@ input:focus, textarea:focus, select:focus {
   }
 }
 
-/* Language Toggle */
-.lang-toggle {
-  display: flex;
-  gap: 8px;
-  background: var(--card-bg);
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-}
-
-.lang-toggle button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.lang-toggle button.active {
-  background: var(--border);
-  color: var(--foreground);
-}
-
 /* Article Page */
 .article-header {
   margin-bottom: 48px;
