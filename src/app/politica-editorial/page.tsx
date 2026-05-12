@@ -1,39 +1,30 @@
 import type { Metadata } from "next";
 import { InstitutionalPage } from "@/components/InstitutionalPage";
+import { getSitePage } from "@/lib/content";
 
-export const metadata: Metadata = {
-  title: "Politica editorial",
-  description: "Entenda os criterios editoriais usados nos conteudos do Saude em Foco.",
-  alternates: {
-    canonical: "/politica-editorial",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getSitePage("politica-editorial");
 
-export default function PoliticaEditorialPage() {
+  return {
+    title: page?.seoTitle || page?.title || "Política editorial",
+    description:
+      page?.seoDescription || page?.description || "Entenda os critérios editoriais usados nos conteúdos do Saúde em Foco.",
+    alternates: {
+      canonical: "/politica-editorial",
+    },
+  };
+}
+
+export default async function PoliticaEditorialPage() {
+  const page = await getSitePage("politica-editorial");
+
   return (
     <InstitutionalPage
-      eyebrow="Confianca e transparencia"
-      title="Politica editorial"
-      description="Nosso objetivo e publicar conteudo util, verificavel e facil de ler, com responsabilidade especial por tratar temas ligados a saude e bem-estar."
-      sections={[
-        {
-          title: "Criterios de publicacao",
-          body: "Cada artigo deve ter uma pergunta central clara, explicar conceitos com contexto suficiente e separar orientacao educativa de recomendacao medica individual.",
-        },
-        {
-          title: "Fontes e referencias",
-          body: "Quando o tema envolve afirmacoes tecnicas, priorizamos diretrizes oficiais, entidades de saude, artigos cientificos e bases reconhecidas como OMS, Ministerio da Saude, PubMed e SciELO.",
-        },
-        {
-          title: "Atualizacoes",
-          body: "Conteudos podem ser revisados conforme novas evidencias, mudancas de diretrizes ou melhorias editoriais. A data exibida no artigo ajuda o leitor a entender a recencia do material.",
-        },
-        {
-          title: "Independencia editorial",
-          body: "Nao publicamos promessas milagrosas, diagnosticos definitivos sem avaliacao ou incentivo a abandonar acompanhamento profissional.",
-        },
-      ]}
-      cta={{ label: "Ver aviso medico", href: "/aviso-medico" }}
+      eyebrow={page?.eyebrow || ""}
+      title={page?.title || "Política editorial"}
+      description={page?.description || ""}
+      sections={page?.sections || []}
+      cta={page?.cta?.href ? { label: page.cta.label, href: page.cta.href } : undefined}
     />
   );
 }

@@ -1,39 +1,12 @@
 import type { MetadataRoute } from "next";
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
 import { siteUrl } from "@/lib/site";
+import { getSitemapArticles } from "@/lib/content";
+import { hasArticleSupplement, supplementalContentUpdatedAt } from "@/lib/article-supplements";
 
 export const dynamic = "force-dynamic";
 
-type SitemapArticle = {
-  slug: string | null;
-  created_at: string | null;
-};
-
-async function getPublishedArticles() {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-
-  const { data, error } = await supabase
-    .from("articles")
-    .select("slug, created_at")
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
-
-  if (!error) {
-    return (data || []) as SitemapArticle[];
-  }
-
-  const { data: fallbackData } = await supabase
-    .from("articles")
-    .select("slug, created_at")
-    .order("created_at", { ascending: false });
-
-  return (fallbackData || []) as SitemapArticle[];
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const articles = await getPublishedArticles();
+  const articles = await getSitemapArticles();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -64,12 +37,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const articleRoutes: MetadataRoute.Sitemap = articles
     .filter((article) => article.slug)
-    .map((article) => ({
-      url: `${siteUrl}/blog/${encodeURIComponent(article.slug!)}`,
-      lastModified: article.created_at ? new Date(article.created_at) : new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    }));
+    .map((article) => {
+      const lastModified = hasArticleSupplement(article.slug!)
+        ? new Date(supplementalContentUpdatedAt)
+        : article.created_at
+          ? new Date(article.created_at)
+          : new Date();
+
+      return {
+        url: `${siteUrl}/blog/${encodeURIComponent(article.slug!)}`,
+        lastModified,
+        changeFrequency: "weekly",
+        priority: 0.8,
+      };
+    });
 
   return [...staticRoutes, ...articleRoutes];
 }

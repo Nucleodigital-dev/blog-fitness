@@ -2,12 +2,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Info, AlertTriangle, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
 import type { Metadata } from "next";
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
 import { marked } from "marked";
 import Image from "next/image";
 import { absoluteUrl, organizationName, siteName, siteUrl } from "@/lib/site";
 import { formatArticleTitle } from "@/lib/text";
+import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
+import { getArticleSupplement } from "@/lib/article-supplements";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,8 @@ type ArticleBlock = {
   faqs?: FaqItem[] | null;
 };
 
+type ArticleContent = string | ArticleBlock[] | null | undefined;
+
 function stripMarkup(value: string) {
   return value
     .replace(/<[^>]*>?/gm, " ")
@@ -37,8 +39,9 @@ function stripMarkup(value: string) {
     .trim();
 }
 
-function parseBlocks(content: string | null | undefined): ArticleBlock[] {
-  if (!content || !content.trim().startsWith("[")) return [];
+function parseBlocks(content: ArticleContent): ArticleBlock[] {
+  if (Array.isArray(content)) return content;
+  if (!content || typeof content !== "string" || !content.trim().startsWith("[")) return [];
 
   try {
     const blocks = JSON.parse(content);
@@ -48,7 +51,7 @@ function parseBlocks(content: string | null | undefined): ArticleBlock[] {
   }
 }
 
-function getPlainArticleText(content: string | null | undefined) {
+function getPlainArticleText(content: ArticleContent) {
   const blocks = parseBlocks(content);
 
   if (blocks.length > 0) {
@@ -62,16 +65,16 @@ function getPlainArticleText(content: string | null | undefined) {
     );
   }
 
-  return stripMarkup(content || "");
+  return stripMarkup(typeof content === "string" ? content : "");
 }
 
-function getMetaDescription(content: string | null | undefined) {
+function getMetaDescription(content: ArticleContent) {
   const text = getPlainArticleText(content);
   if (!text) return "";
   return text.length > 157 ? `${text.substring(0, 157)}...` : text;
 }
 
-function getReadingTime(content: string | null | undefined, lang: "pt" | "en") {
+function getReadingTime(content: ArticleContent, lang: "pt" | "en") {
   const words = getPlainArticleText(content).split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.ceil(words / 200));
   return lang === "en" ? `${minutes} min read` : `Leitura: ${minutes} min`;
@@ -91,6 +94,10 @@ function getReferenceLines(blocks: ArticleBlock[]) {
     .filter(Boolean);
 }
 
+function renderMarkdown(value: string | null | undefined) {
+  return marked(value || "") as string;
+}
+
 const englishUnavailableContent = `## English version coming soon
 
 This article is not available in English yet. We are preparing a complete English version written specifically for English readers, and it will be published soon.
@@ -99,14 +106,14 @@ In the meantime, you can switch back to the Portuguese version to read the full 
 
 const uiCopy = {
   pt: {
-    home: "Inicio",
+    home: "Início",
     reading: "Leitura: 8 min",
     updated: "Atualizado",
-    educational: "Conteudo Educativo",
+    educational: "Conteúdo Educativo",
     summary: "Resumo em 30 segundos",
     toc: "Neste artigo:",
-    faq: "Tire suas duvidas",
-    related: "Proximos passos recomendados",
+    faq: "Tire suas dúvidas",
+    related: "Próximos passos recomendados",
     readLater: "Leia depois",
     readArticle: "Acessar artigo",
     switchLabel: "Idioma do artigo",
@@ -114,10 +121,10 @@ const uiCopy = {
     english: "EN",
     preTitle: {
       intro: "Contexto",
-      causes: "Diagnostico rapido",
+      causes: "Diagnóstico rápido",
       exercise_routine: "Passo a passo",
-      references: "Ciencia",
-      default: "Guia pratico",
+      references: "Ciência",
+      default: "Guia prático",
     },
   },
   en: {
@@ -150,7 +157,7 @@ function resolveLang(searchParams: { lang?: string | string[] }) {
 }
 
 function hasUsableEnglish(article: any) {
-  const content = typeof article.content_en === "string" ? article.content_en.trim() : "";
+  const content = getPlainArticleText(article.content_en);
   return Boolean(
     article.title_en?.trim() &&
     content.length >= 600 &&
@@ -170,22 +177,29 @@ function getLocalizedContent(article: any, isEn: boolean, hasEnglish: boolean) {
   return article.content_pt;
 }
 
+function getContentForMetadata(content: ArticleContent, slug: string) {
+  const supplement = getArticleSupplement(slug);
+  if (supplement.length === 0) return content;
+
+  return [
+    ...parseBlocks(content),
+    ...supplement,
+  ];
+}
+
 export async function generateMetadata({ params, searchParams }: BlogPostProps): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   const lang = resolveLang(resolvedSearchParams);
   const isEn = lang === "en";
 
-  const { data } = await supabase.from('articles').select('slug, title_pt, title_en, content_pt, content_en, cover_image, cover_alt, created_at').eq('slug', resolvedParams.slug).single();
-  const article = data as any;
+  const article = await getArticleBySlug(resolvedParams.slug);
   if (!article) return { title: "Not Found" };
 
   const hasEnglish = hasUsableEnglish(article);
   const title = getLocalizedTitle(article, isEn, hasEnglish);
   const content = getLocalizedContent(article, isEn, hasEnglish);
-  const description = getMetaDescription(content);
+  const description = getMetaDescription(getContentForMetadata(content, article.slug));
   const canonicalPath = `/blog/${article.slug}`;
   const image = getArticleImage(article.cover_image);
 
@@ -240,8 +254,6 @@ export default async function BlogPost({
   params,
   searchParams 
 }: BlogPostProps) {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   
@@ -250,28 +262,7 @@ export default async function BlogPost({
   const isEn = lang === "en";
   const copy = uiCopy[lang];
 
-  const { data } = await supabase
-    .from('articles')
-    .select(`
-      *,
-      categories (
-        name_pt,
-        name_en,
-        slug
-      )
-    `)
-    .eq('slug', slug)
-    .single();
-
-  let article: any = null;
-  if (data) {
-    article = {
-      ...data,
-      cat_name_pt: data.categories?.name_pt,
-      cat_name_en: data.categories?.name_en,
-      cat_slug: data.categories?.slug
-    };
-  }
+  const article: any = await getArticleBySlug(slug);
 
   if (!article) notFound();
 
@@ -282,44 +273,17 @@ export default async function BlogPost({
   const contentRaw = getLocalizedContent(article, isEn, hasEnglish);
   const readingTime = getReadingTime(contentRaw, lang);
   
-  let isJsonBlocks = false;
-  let blocksArray: ArticleBlock[] = [];
-  try {
-    if (contentRaw && contentRaw.trim().startsWith('[')) {
-      blocksArray = JSON.parse(contentRaw);
-      isJsonBlocks = Array.isArray(blocksArray);
-    }
-  } catch (e) {
-    // legacy markdown
-  }
-
-  const legacyHtml = !isJsonBlocks ? marked(contentRaw || "") : "";
+  const originalBlocks = parseBlocks(contentRaw);
+  const supplementBlocks = isEn ? [] : getArticleSupplement(slug);
+  const blocksArray = [...originalBlocks, ...supplementBlocks];
+  const isJsonBlocks = originalBlocks.length > 0;
+  const legacyHtml = !isJsonBlocks && typeof contentRaw === "string" ? renderMarkdown(contentRaw) : "";
   
   // Extrai o Quick Answer para o "Resumo" do artigo, se existir
   const quickAnswerBlock = blocksArray.find(b => b.type === 'quick_answer');
   const otherBlocks = blocksArray.filter(b => b.type !== 'quick_answer');
 
-  const { data: relatedCatData } = await supabase
-    .from('articles')
-    .select('id, slug, title_pt, title_en, cover_image, cover_alt')
-    .eq('category_id', article.category_id)
-    .eq('status', 'published')
-    .neq('id', article.id)
-    .order('created_at', { ascending: false })
-    .limit(2);
-
-  let related = relatedCatData || [];
-
-  if (related.length === 0) {
-    const { data: relatedAnyData } = await supabase
-      .from('articles')
-      .select('id, slug, title_pt, title_en, cover_image, cover_alt')
-      .eq('status', 'published')
-      .neq('id', article.id)
-      .order('created_at', { ascending: false })
-      .limit(2);
-    related = relatedAnyData || [];
-  }
+  const related = await getRelatedArticles(article.id, article.category_id);
 
   const canonicalUrl = absoluteUrl(`/blog/${slug}`);
   const articleDescription = getMetaDescription(contentRaw);
@@ -344,7 +308,7 @@ export default async function BlogPost({
           {
             "@type": "ListItem",
             position: 1,
-            name: "Inicio",
+            name: "Início",
             item: siteUrl,
           },
           ...(catName
@@ -537,16 +501,18 @@ export default async function BlogPost({
               <Info size={28} />
               <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Resumo em 30 segundos</h3>
             </div>
-            <div dangerouslySetInnerHTML={{ __html: quickAnswerBlock.isHtml ? (quickAnswerBlock.content || "") : marked(quickAnswerBlock.content || "") }} style={{ fontSize: '1.25rem', lineHeight: 1.8 }} />
+            <div dangerouslySetInnerHTML={{ __html: quickAnswerBlock.isHtml ? (quickAnswerBlock.content || "") : renderMarkdown(quickAnswerBlock.content) }} style={{ fontSize: '1.25rem', lineHeight: 1.8 }} />
           </div>
         )}
 
         <div className="article-content">
-          {isJsonBlocks ? (
+          {legacyHtml && <div dangerouslySetInnerHTML={{ __html: legacyHtml }} />}
+
+          {blocksArray.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               
               {/* Sumário Clicável (Table of Contents) */}
-              {otherBlocks.length > 0 && (
+              {originalBlocks.length > 0 && otherBlocks.length > 0 && (
                 <div style={{ background: 'var(--card-bg)', padding: 32, borderRadius: 20, border: '1px solid var(--border)', marginBottom: 56 }}>
                   <p style={{ fontWeight: 800, marginBottom: 20, fontSize: '1.25rem' }}>Neste artigo:</p>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -575,7 +541,7 @@ export default async function BlogPost({
                          <AlertTriangle size={28} />
                          <h2 style={{ fontSize: '1.75rem', color: '#991b1b', margin: 0 }}>{block.title}</h2>
                        </div>
-                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : marked(block.content || "") }} />
+                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : renderMarkdown(block.content) }} />
                      </div>
                    );
                  }
@@ -588,7 +554,7 @@ export default async function BlogPost({
                          <CheckCircle2 size={28} />
                          <h2 style={{ fontSize: '1.75rem', color: '#0f766e', margin: 0 }}>{block.title}</h2>
                        </div>
-                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : marked(block.content || "") }} />
+                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : renderMarkdown(block.content) }} />
                      </div>
                    );
                  }
@@ -606,7 +572,7 @@ export default async function BlogPost({
                                <span style={{ fontSize: '1.5rem', color: 'var(--primary)', lineHeight: 0 }}>+</span>
                              </summary>
                              <div style={{ padding: '0 24px 24px 24px', fontSize: '1.05rem', color: 'var(--text-muted)' }}>
-                               <div dangerouslySetInnerHTML={{ __html: marked(faq.a) }} />
+                               <div dangerouslySetInnerHTML={{ __html: renderMarkdown(faq.a) }} />
                              </div>
                            </details>
                          ))}
@@ -625,13 +591,11 @@ export default async function BlogPost({
                  return (
                    <div key={i} id={sectionId} style={{ marginBottom: 48 }}>
                      <SectionHeader preTitle={preTitle} title={block.title} />
-                     <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : marked(block.content || "") }} />
+                     <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : renderMarkdown(block.content) }} />
                    </div>
                  );
               })}
             </div>
-          ) : (
-            <div dangerouslySetInnerHTML={{ __html: legacyHtml }} />
           )}
         </div>
 
