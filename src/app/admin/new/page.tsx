@@ -255,11 +255,11 @@ export default function SmartEditor() {
   const isCompleted = currentBlockIndex >= activeBlocks.length;
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div className="admin-editor-page" style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px 80px' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
+      <div className="admin-step-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
         <h1>Editor Inteligente</h1>
-        <div style={{ display: 'flex', gap: 8, color: 'var(--text-muted)' }}>
+        <div className="admin-step-indicator" style={{ display: 'flex', gap: 8, color: 'var(--text-muted)' }}>
           <span style={{ color: step >= 1 ? 'var(--primary)' : '' }}>1. Config</span> -
           <span style={{ color: step >= 2 ? 'var(--primary)' : '' }}>2. Estrutura</span> -
           <span style={{ color: step >= 3 ? 'var(--primary)' : '' }}>3. Blocos</span>
@@ -267,7 +267,7 @@ export default function SmartEditor() {
       </div>
 
       {step === 1 && (
-        <form onSubmit={handleConfigSubmit} style={{ background: 'var(--card-bg)', padding: 32, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+        <form className="admin-card" onSubmit={handleConfigSubmit} style={{ background: 'var(--card-bg)', padding: 32, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
           <h2 style={{ marginBottom: 24 }}>O que você quer criar?</h2>
           
           <div className="form-group">
@@ -275,7 +275,7 @@ export default function SmartEditor() {
             <input required value={formData.title_pt} onChange={e => setFormData({...formData, title_pt: e.target.value})} placeholder="Ex: Dor na lombar ao acordar..." />
           </div>
           
-          <div style={{ display: 'flex', gap: 24 }}>
+          <div className="admin-form-grid" style={{ display: 'flex', gap: 24 }}>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Categoria</label>
               <select required value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})}>
@@ -298,7 +298,7 @@ export default function SmartEditor() {
       )}
 
       {step === 2 && (
-        <div style={{ background: 'var(--card-bg)', padding: 32, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+        <div className="admin-card" style={{ background: 'var(--card-bg)', padding: 32, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
           <h2 style={{ marginBottom: 24 }}>Estrutura Sugerida</h2>
           
           <div style={{ marginBottom: 32 }}>
@@ -326,7 +326,7 @@ export default function SmartEditor() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div className="admin-actions" style={{ display: 'flex', gap: 16 }}>
             <button onClick={() => setStep(1)} className="btn btn-secondary"><ChevronLeft size={18} /> Voltar</button>
             <button onClick={handleStructureSubmit} className="btn btn-primary" style={{ flex: 1 }}>Montar Formulário <ChevronRight size={18} /></button>
           </div>
@@ -346,8 +346,8 @@ export default function SmartEditor() {
           </div>
 
           {!isCompleted ? (
-            <div style={{ background: 'var(--card-bg)', padding: 40, borderRadius: 'var(--radius)', border: '1px solid var(--border)', minHeight: 400, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="admin-card admin-block-card" style={{ background: 'var(--card-bg)', padding: 40, borderRadius: 'var(--radius)', border: '1px solid var(--border)', minHeight: 400, display: 'flex', flexDirection: 'column' }}>
+              <div className="admin-block-header" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <span style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase' }}>Bloco {currentBlockIndex + 1} de {activeBlocks.length}</span>
                   <h2 style={{ fontSize: '2rem', marginTop: 8 }}>{activeBlocks[currentBlockIndex].name}</h2>
@@ -356,7 +356,7 @@ export default function SmartEditor() {
                 
                 {/* Image Upload and HTML Toggle for this block */}
                 {activeBlocks[currentBlockIndex].type !== 'faq' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
+                  <div className="admin-block-tools" style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
                       <input type="checkbox" checked={blockValues[activeBlocks[currentBlockIndex].id]?.isHtml || false} onChange={e => setBlockValues({...blockValues, [activeBlocks[currentBlockIndex].id]: { ...blockValues[activeBlocks[currentBlockIndex].id], isHtml: e.target.checked }})} />
                       Injetar HTML Puro (Sem classes padrão)
@@ -379,7 +379,7 @@ export default function SmartEditor() {
               {activeBlocks[currentBlockIndex].type === 'faq' ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {blockValues[activeBlocks[currentBlockIndex].id].faq.map((item: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', gap: 12, background: 'var(--background)', padding: 16, borderRadius: 8 }}>
+                    <div className="admin-faq-row" key={i} style={{ display: 'flex', gap: 12, background: 'var(--background)', padding: 16, borderRadius: 8 }}>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {/* PT-BR */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -465,21 +465,21 @@ export default function SmartEditor() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 32 }}>
+              <div className="admin-actions" style={{ display: 'flex', justifyContent: 'space-between', marginTop: 32 }}>
                 <button onClick={() => setCurrentBlockIndex(prev => Math.max(0, prev - 1))} disabled={currentBlockIndex === 0} className="btn btn-secondary"><ChevronLeft size={18} /> Anterior</button>
                 <button onClick={nextBlock} className="btn btn-primary">Próximo Bloco <ChevronRight size={18} /></button>
               </div>
             </div>
           ) : (
-            <div style={{ background: 'var(--card-bg)', padding: 40, borderRadius: 'var(--radius)', border: '1px solid var(--border)', textAlign: 'center' }}>
+            <div className="admin-card" style={{ background: 'var(--card-bg)', padding: 40, borderRadius: 'var(--radius)', border: '1px solid var(--border)', textAlign: 'center' }}>
               <CheckCircle2 size={64} color="var(--primary)" style={{ margin: '0 auto 24px' }} />
               <h2>Artigo Concluído!</h2>
               <p style={{ color: 'var(--text-muted)', marginBottom: 32 }}>Todos os blocos foram preenchidos.</p>
               
-              <div style={{ background: 'var(--background)', padding: 24, borderRadius: 8, textAlign: 'left', marginBottom: 32 }}>
+              <div className="admin-card-inner" style={{ background: 'var(--background)', padding: 24, borderRadius: 8, textAlign: 'left', marginBottom: 32 }}>
                 <h3 style={{ marginBottom: 16 }}>Capa OBRIGATÓRIA</h3>
                 
-                <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 16 }}>
+                <div className="admin-cover-row" style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 16 }}>
                   {formData.cover_image && (
                     <div style={{ width: 120, height: 80, position: 'relative', borderRadius: 8, overflow: 'hidden' }}>
                       <Image src={formData.cover_image} alt="Capa" fill style={{ objectFit: 'cover' }} />
@@ -498,7 +498,7 @@ export default function SmartEditor() {
                 </label>
               </div>
 
-              <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+              <div className="admin-actions center" style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
                 <button onClick={() => saveArticle('draft')} disabled={saving} className="btn btn-secondary">
                   Salvar Rascunho
                 </button>

@@ -29,6 +29,7 @@ export const defaultSiteSettings: SiteSettings = {
       links: [
         { label: "Sobre", href: "/sobre" },
         { label: "Política editorial", href: "/politica-editorial" },
+        { label: "Política de cookies", href: "/politica-de-cookies" },
         { label: "Aviso médico", href: "/aviso-medico" },
       ],
     },
@@ -126,6 +127,50 @@ export const defaultPages: Record<string, SitePage> = {
       },
     ],
     cta: { label: "Ver aviso médico", href: "/aviso-medico" },
+  },
+  "politica-de-cookies": {
+    slug: "politica-de-cookies",
+    eyebrow: "Privacidade e preferências",
+    title: "Política de cookies",
+    description:
+      "Esta página explica como usamos cookies e tecnologias semelhantes para manter o Saúde em Foco funcionando e lembrar escolhas feitas por você.",
+    seoTitle: "Política de cookies",
+    seoDescription: "Entenda quais cookies o Saúde em Foco usa e como controlar suas preferências.",
+    sections: [
+      {
+        title: "O que são cookies",
+        body: "Cookies são pequenos arquivos salvos no navegador para reconhecer preferências, manter recursos técnicos funcionando e melhorar a experiência de navegação.",
+      },
+      {
+        title: "Cookies essenciais",
+        body: "Usamos cookies essenciais para registrar suas escolhas de consentimento, manter recursos técnicos e preservar a sessão administrativa quando aplicável. Esses recursos ficam sempre ativos porque sustentam o funcionamento básico.",
+      },
+      {
+        title: "Preferências",
+        body: "Com sua permissão, salvamos idioma preferido, tema claro ou escuro, artigos salvos para depois, últimos artigos vistos e categorias favoritas. Esses dados ficam no seu navegador.",
+      },
+      {
+        title: "Estatísticas",
+        body: "Com consentimento, podemos carregar ferramentas como Google Analytics para entender páginas acessadas, desempenho e comportamento agregado. O carregamento só acontece quando a categoria de estatísticas está ativa e o ID está configurado.",
+      },
+      {
+        title: "Marketing",
+        body: "Com consentimento, podemos carregar ferramentas como Meta Pixel para medir campanhas e públicos. Essa categoria fica desligada até você permitir explicitamente.",
+      },
+      {
+        title: "Notificações do navegador",
+        body: "As notificações só são ativadas se você ligar essa categoria, clicar em permitir e confirmar a permissão nativa do navegador. Você pode bloquear ou remover essa permissão a qualquer momento nas configurações do navegador.",
+      },
+      {
+        title: "Como controlar suas escolhas",
+        body: "Você pode aceitar todos os opcionais ou recusá-los no aviso exibido pelo site. Depois disso, é possível limpar cookies, armazenamento local e permissões diretamente nas configurações do navegador.",
+      },
+      {
+        title: "Atualizações desta política",
+        body: "Esta política pode ser atualizada quando novos recursos forem adicionados, quando houver mudanças técnicas ou quando precisarmos explicar melhor o uso de dados e preferências.",
+      },
+    ],
+    cta: { label: "Voltar para o blog", href: "/" },
   },
   "aviso-medico": {
     slug: "aviso-medico",

@@ -5,6 +5,8 @@ import { getContentExcerpt } from "@/lib/content-utils";
 import { getAllArticles, getCategories, getSitePage } from "@/lib/content";
 import type { Article } from "@/lib/content-types";
 import { formatArticleTitle } from "@/lib/text";
+import { LanguagePreferenceLink } from "@/components/LanguagePreferenceLink";
+import { FavoriteCategoryButton, ReadingMemory } from "@/components/ReadingMemory";
 
 export const dynamic = "force-dynamic";
 
@@ -65,17 +67,27 @@ export default async function Home({
     regularArticles = displayedArticles.filter((article) => !featuredIds.includes(article.id));
   }
 
+  const latestArticle = allArticles[0]
+    ? {
+        slug: allArticles[0].slug,
+        title: formatArticleTitle(isEn && allArticles[0].title_en ? allArticles[0].title_en : allArticles[0].title_pt, lang),
+        href: `/blog/${allArticles[0].slug}?lang=${lang}`,
+        image: allArticles[0].cover_image,
+        createdAt: allArticles[0].created_at,
+      }
+    : null;
+
   return (
     <>
       <div className="hero" style={{ marginBottom: categorySlug ? 48 : 64 }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
           <div className="lang-toggle">
-            <Link href={`?lang=pt${categorySlug ? `&category=${categorySlug}` : ""}`}>
+            <LanguagePreferenceLink href={`?lang=pt${categorySlug ? `&category=${categorySlug}` : ""}`} language="pt">
               <button className={!isEn ? "active" : ""}>PT-BR</button>
-            </Link>
-            <Link href={`?lang=en${categorySlug ? `&category=${categorySlug}` : ""}`}>
+            </LanguagePreferenceLink>
+            <LanguagePreferenceLink href={`?lang=en${categorySlug ? `&category=${categorySlug}` : ""}`} language="en">
               <button className={isEn ? "active" : ""}>EN-US</button>
-            </Link>
+            </LanguagePreferenceLink>
           </div>
         </div>
         {categorySlug ? (
@@ -91,6 +103,8 @@ export default async function Home({
           </>
         )}
       </div>
+
+      {!categorySlug && <ReadingMemory latestArticle={latestArticle} />}
 
       {!categorySlug && featuredArticles.length > 0 && (
         <div className="bento-grid">
@@ -136,7 +150,7 @@ export default async function Home({
 
       <div className="layout-with-sidebar">
         <div>
-          {categorySlug && <h2 style={{ marginBottom: 32, fontSize: "2rem" }}>Ultimos Artigos</h2>}
+          {categorySlug && <h2 style={{ marginBottom: 32, fontSize: "2rem" }}>Últimos artigos</h2>}
           <div className="article-grid">
             {regularArticles.map((article) => {
               const title = formatArticleTitle(isEn && article.title_en ? article.title_en : article.title_pt, lang);
@@ -185,19 +199,22 @@ export default async function Home({
             {sidebarCategories.map((cat) => {
               const count = allArticles.filter((article) => article.category_id === cat.id).length;
               return (
-                <Link href={`/?category=${cat.slug}&lang=${lang}`} key={cat.id} className="category-pill">
-                  <span>{isEn && cat.name_en ? cat.name_en : cat.name_pt}</span>
-                  <span
-                    style={{
-                      background: "var(--background)",
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    {count}
-                  </span>
-                </Link>
+                <div key={cat.id} className="category-preference-row">
+                  <Link href={`/?category=${cat.slug}&lang=${lang}`} className="category-pill">
+                    <span>{isEn && cat.name_en ? cat.name_en : cat.name_pt}</span>
+                    <span
+                      style={{
+                        background: "var(--background)",
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      {count}
+                    </span>
+                  </Link>
+                  <FavoriteCategoryButton slug={cat.slug} label={cat.name_pt || cat.slug} />
+                </div>
               );
             })}
             {categories.length === 0 && <p style={{ color: "var(--text-muted)" }}>Nenhuma categoria.</p>}

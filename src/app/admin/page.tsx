@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
@@ -9,6 +10,8 @@ type Article = {
   slug: string;
   title_pt: string;
   title_en: string;
+  cover_image?: string | null;
+  cover_alt?: string | null;
   created_at: string;
 };
 
@@ -38,7 +41,7 @@ export default function AdminDashboard() {
       } else {
         alert('Erro ao excluir artigo.');
       }
-    } catch (error) {
+    } catch {
       alert('Erro ao excluir artigo.');
     }
   };
@@ -47,7 +50,7 @@ export default function AdminDashboard() {
     <div className="admin-container" style={{ maxWidth: 900, margin: '0 auto', paddingTop: 40 }}>
       <div className="admin-header">
         <h1>CMS | Artigos</h1>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="admin-header-actions" style={{ display: 'flex', gap: 12 }}>
           <Link href="/admin/categories" className="btn btn-secondary">
             Gerenciar Categorias
           </Link>
@@ -62,15 +65,28 @@ export default function AdminDashboard() {
       ) : (
         <div className="article-grid" style={{ marginTop: 32 }}>
           {articles.map((article) => (
-            <div key={article.id} className="article-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
-              <div>
+            <div key={article.id} className="article-card admin-article-row">
+              <div className="admin-article-cover">
+                {article.cover_image ? (
+                  <Image
+                    src={article.cover_image}
+                    alt={article.cover_alt || article.title_pt}
+                    fill
+                    sizes="112px"
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <span className="admin-article-cover-placeholder">Sem capa</span>
+                )}
+              </div>
+              <div style={{ minWidth: 0 }}>
                 <h2 style={{ fontSize: '1.25rem', marginBottom: 8 }}>{article.title_pt}</h2>
                 <div className="article-meta">
                   <span>/{article.slug}</span>
                   <span>{new Date(article.created_at).toLocaleDateString('pt-BR')}</span>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="admin-article-actions">
                 <Link href={`/admin/edit/${article.id}`} className="btn btn-secondary" style={{ padding: '8px 16px' }}>
                   <Edit size={16} /> Editar
                 </Link>

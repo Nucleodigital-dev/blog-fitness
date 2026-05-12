@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { SitePreferenceControls } from "@/components/SitePreferenceControls";
 
 type Category = {
   id: string;
@@ -55,7 +56,7 @@ export function SiteHeader({ categories, navigationItems, logo, logoAlt }: SiteH
           <Image src={logo} alt={logoAlt} width={150} height={50} style={{ objectFit: "contain" }} />
         </Link>
 
-        <nav className="desktop-nav" aria-label="Navegacao principal">
+        <nav className="desktop-nav" aria-label="Navegação principal">
           {navigationItems.map((item) => {
             const href = resolveHref(item);
             const subcategories = getSubcategories(item, categories);
@@ -81,6 +82,8 @@ export function SiteHeader({ categories, navigationItems, logo, logoAlt }: SiteH
             );
           })}
         </nav>
+
+        <SitePreferenceControls />
 
         <button
           type="button"

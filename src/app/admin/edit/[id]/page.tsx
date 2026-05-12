@@ -226,7 +226,7 @@ export default function EditArticlePage() {
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px 80px" }}>
+    <div className="admin-editor-page" style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px 80px" }}>
       <div className="admin-header">
         <div>
           <Link href="/admin" style={{ color: "var(--primary)", fontWeight: 600, display: "inline-flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
@@ -234,7 +234,7 @@ export default function EditArticlePage() {
           </Link>
           <h1>Editar Artigo</h1>
         </div>
-        <div style={{ display: "flex", gap: 12 }}>
+        <div className="admin-header-actions" style={{ display: "flex", gap: 12 }}>
           <button className="btn btn-secondary" onClick={() => saveArticle("draft")} disabled={saving}>
             {saving ? <Loader2 size={18} /> : <Save size={18} />} Salvar rascunho
           </button>
@@ -244,7 +244,7 @@ export default function EditArticlePage() {
         </div>
       </div>
 
-      <div style={{ background: "var(--card-bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 32, marginBottom: 32 }}>
+      <div className="admin-card" style={{ background: "var(--card-bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 32, marginBottom: 32 }}>
         <div className="form-group">
           <label>Título (H1)</label>
           <input
@@ -256,7 +256,7 @@ export default function EditArticlePage() {
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div className="admin-two-column" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div className="form-group">
             <label>Slug</label>
             <input value={article.slug} onChange={e => updateArticle("slug", makeSlug(e.target.value))} />
@@ -279,7 +279,7 @@ export default function EditArticlePage() {
               <Image src={article.cover_image} alt={article.cover_alt || article.title_pt} fill style={{ objectFit: "cover" }} />
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center" }}>
+          <div className="admin-upload-control" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center" }}>
             <input value={article.cover_image || ""} onChange={e => updateArticle("cover_image", e.target.value)} placeholder="/uploads/imagem.png ou URL" />
             <label className="btn btn-secondary" style={{ whiteSpace: "nowrap" }}>
               {uploadingCover ? <Loader2 size={18} /> : <ImagePlus size={18} />} Upload
@@ -304,8 +304,8 @@ export default function EditArticlePage() {
         </label>
       </div>
 
-      <div style={{ background: "var(--card-bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 32 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 24 }}>
+      <div className="admin-card" style={{ background: "var(--card-bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 32 }}>
+        <div className="admin-content-header" style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", marginBottom: 24 }}>
           <div>
             <h2 style={{ marginBottom: 4 }}>Conteúdo</h2>
             <p style={{ color: "var(--text-muted)", margin: 0 }}>
@@ -334,7 +334,7 @@ export default function EditArticlePage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {blocks.map((block, index) => (
               <section key={`${block.type}-${index}`} style={{ border: "1px solid var(--border)", borderRadius: 12, padding: 24 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div className="admin-two-column" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                   <div className="form-group">
                     <label>Nome do bloco</label>
                     <input value={block.title} onChange={e => updateBlock(index, { title: e.target.value })} />

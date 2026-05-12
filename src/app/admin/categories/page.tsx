@@ -111,19 +111,19 @@ export default function CategoriesAdmin() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', paddingTop: 40, paddingBottom: 60 }}>
+    <div className="admin-editor-page" style={{ maxWidth: 900, margin: '0 auto', paddingTop: 40, paddingBottom: 60 }}>
       <div className="admin-header">
         <h1>Categorias</h1>
         <Link href="/admin" className="btn btn-secondary">Voltar para Artigos</Link>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
-        <form onSubmit={handleSubmit} style={{ background: 'var(--card-bg)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+      <div className="admin-two-column" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+        <form className="admin-card" onSubmit={handleSubmit} style={{ background: 'var(--card-bg)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
           <h2 style={{ marginBottom: 24 }}>Nova Categoria</h2>
           
           <div className="form-group">
             <label>Nome (PT-BR)</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="admin-inline-control" style={{ display: 'flex', gap: 8 }}>
               <input required value={formData.name_pt} onChange={handleNameChange} placeholder="Ex: Musculação" />
               <button type="button" onClick={handleTranslate} className="btn btn-secondary" style={{ padding: '0 16px' }}>Traduzir</button>
             </div>
@@ -166,14 +166,14 @@ export default function CategoriesAdmin() {
           </button>
         </form>
 
-        <div style={{ background: 'var(--card-bg)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+        <div className="admin-card" style={{ background: 'var(--card-bg)', padding: 24, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
           <h2 style={{ marginBottom: 24 }}>Categorias Existentes</h2>
           {loading ? <p>Carregando...</p> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {categories.map(c => {
                 const parent = categories.find(p => p.id === c.parent_id);
                 return (
-                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                  <div className="admin-category-row" key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
                     <div>
                       <strong>{c.name_pt}</strong> <span style={{ color: 'var(--text-muted)' }}>({c.name_en})</span>
                       <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>

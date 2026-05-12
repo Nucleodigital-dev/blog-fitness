@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { absoluteUrl, siteDescription, siteName, siteUrl } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ConsentCenter } from "@/components/ConsentCenter";
+import { UserPreferenceRuntime } from "@/components/UserPreferenceRuntime";
 import { getCategories, getSiteSettings } from "@/lib/content";
 import type { Category } from "@/lib/content-types";
 
@@ -72,6 +74,8 @@ export default async function RootLayout({
         />
 
         <main className="container">{children}</main>
+        <UserPreferenceRuntime />
+        <ConsentCenter />
 
         <footer className="footer">
           <div className="container">

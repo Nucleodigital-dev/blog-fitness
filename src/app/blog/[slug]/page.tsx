@@ -8,6 +8,8 @@ import { absoluteUrl, organizationName, siteName, siteUrl } from "@/lib/site";
 import { formatArticleTitle } from "@/lib/text";
 import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
 import { getArticleSupplement } from "@/lib/article-supplements";
+import { ArticleEngagement } from "@/components/ArticleEngagement";
+import { LanguagePreferenceLink } from "@/components/LanguagePreferenceLink";
 
 export const dynamic = "force-dynamic";
 
@@ -474,9 +476,18 @@ export default async function BlogPost({
           </div>
 
           <nav aria-label={copy.switchLabel} style={{ display: 'inline-flex', gap: 4, border: '1px solid var(--border)', borderRadius: 999, padding: 4, background: 'var(--card-bg)', marginBottom: 24 }}>
-            <Link href={`/blog/${slug}?lang=pt`} style={{ padding: '6px 12px', borderRadius: 999, fontWeight: 800, color: !isEn ? 'white' : 'var(--primary)', background: !isEn ? 'var(--primary)' : 'transparent', textDecoration: 'none' }}>{copy.portuguese}</Link>
-            <Link href={`/blog/${slug}?lang=en`} style={{ padding: '6px 12px', borderRadius: 999, fontWeight: 800, color: isEn ? 'white' : 'var(--primary)', background: isEn ? 'var(--primary)' : 'transparent', textDecoration: 'none' }}>{copy.english}</Link>
+            <LanguagePreferenceLink href={`/blog/${slug}?lang=pt`} language="pt" style={{ padding: '6px 12px', borderRadius: 999, fontWeight: 800, color: !isEn ? 'white' : 'var(--primary)', background: !isEn ? 'var(--primary)' : 'transparent', textDecoration: 'none' }}>{copy.portuguese}</LanguagePreferenceLink>
+            <LanguagePreferenceLink href={`/blog/${slug}?lang=en`} language="en" style={{ padding: '6px 12px', borderRadius: 999, fontWeight: 800, color: isEn ? 'white' : 'var(--primary)', background: isEn ? 'var(--primary)' : 'transparent', textDecoration: 'none' }}>{copy.english}</LanguagePreferenceLink>
           </nav>
+
+          <ArticleEngagement
+            article={{
+              slug,
+              title,
+              href: `/blog/${slug}?lang=${lang}`,
+              image: article.cover_image,
+            }}
+          />
 
           <h1 style={{ fontSize: '3rem', lineHeight: 1.1, marginBottom: 24, color: 'var(--foreground)' }}>{title}</h1>
           
