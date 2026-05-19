@@ -81,13 +81,15 @@ export default async function RootLayout({
           <div className="container">
             <div className="footer-grid">
               <div>
-                <Image
-                  src={logo}
-                  alt={logoAlt}
-                  width={120}
-                  height={40}
-                  style={{ objectFit: "contain", marginBottom: 16 }}
-                />
+                <span className="logo-badge footer-logo">
+                  <Image
+                    src={logo}
+                    alt={logoAlt}
+                    width={120}
+                    height={40}
+                    style={{ objectFit: "contain" }}
+                  />
+                </span>
                 <p style={{ maxWidth: 300, fontSize: "0.875rem" }}>
                   {settings.footerDescription || settings.description || siteDescription}
                 </p>

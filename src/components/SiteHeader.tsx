@@ -53,7 +53,9 @@ export function SiteHeader({ categories, navigationItems, logo, logoAlt }: SiteH
     <header className="header">
       <div className="container header-content">
         <Link href="/" className="logo" onClick={closeMenu}>
-          <Image src={logo} alt={logoAlt} width={150} height={50} style={{ objectFit: "contain" }} />
+          <span className="logo-badge">
+            <Image src={logo} alt={logoAlt} width={150} height={50} style={{ objectFit: "contain" }} />
+          </span>
         </Link>
 
         <nav className="desktop-nav" aria-label="Navegação principal">
