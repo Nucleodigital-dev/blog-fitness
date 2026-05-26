@@ -1,0 +1,2 @@
+# Placeholder ads.txt
+# Replace this file with the publisher entry provided by Google AdSense after approval.

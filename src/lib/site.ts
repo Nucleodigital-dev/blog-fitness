@@ -9,6 +9,8 @@ export const siteDescription =
 
 export const organizationName = "Saúde em Foco";
 
+export const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contato@saudeemfoco.com.br";
+
 export const absoluteUrl = (path = "/") => {
   if (/^https?:\/\//i.test(path)) return path;
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;

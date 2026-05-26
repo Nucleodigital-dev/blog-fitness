@@ -1,4 +1,5 @@
 import type { SitePage, SiteSettings } from "./content-types";
+import { contactEmail } from "./site";
 
 export const defaultSiteSettings: SiteSettings = {
   title: "Saúde em Foco",
@@ -6,6 +7,7 @@ export const defaultSiteSettings: SiteSettings = {
   logo: "/logo.png",
   logoAlt: "Saúde em Foco",
   footerDescription: "Os melhores artigos sobre saúde, fitness e bem-estar. Transforme seu corpo e mente.",
+  contactEmail,
   navigationItems: [
     { label: "Início", href: "/" },
     { label: "Nutrição Fitness", categorySlug: "nutricao-fitness" },
@@ -13,6 +15,7 @@ export const defaultSiteSettings: SiteSettings = {
     { label: "Mentalidade e Hábitos", categorySlug: "mentalidade-habitos" },
     { label: "Suplementação e Recuperação", categorySlug: "suplementacao-recuperacao" },
     { label: "Sobre", href: "/sobre" },
+    { label: "Contato", href: "/contato" },
   ],
   footerColumns: [
     {
@@ -28,9 +31,13 @@ export const defaultSiteSettings: SiteSettings = {
       title: "Institucional",
       links: [
         { label: "Sobre", href: "/sobre" },
+        { label: "Contato", href: "/contato" },
         { label: "Política editorial", href: "/politica-editorial" },
+        { label: "Política de privacidade", href: "/politica-de-privacidade" },
         { label: "Política de cookies", href: "/politica-de-cookies" },
+        { label: "Termos de uso", href: "/termos-de-uso" },
         { label: "Aviso médico", href: "/aviso-medico" },
+        { label: "Autor", href: "/autor/redacao-saude-em-foco" },
       ],
     },
   ],
@@ -83,6 +90,34 @@ export const defaultPages: Record<string, SitePage> = {
       },
     ],
     cta: { label: "Ler artigos", href: "/" },
+  },
+  contato: {
+    slug: "contato",
+    eyebrow: "Fale com a equipe",
+    title: "Contato",
+    description:
+      "Este é o canal para dúvidas, correções, mensagens institucionais e assuntos relacionados ao conteúdo publicado no Saúde em Foco.",
+    seoTitle: "Contato",
+    seoDescription: "Entre em contato com a equipe editorial do Saúde em Foco.",
+    sections: [
+      {
+        title: "Canal principal",
+        body: `Você pode falar com a equipe pelo e-mail ${contactEmail}. Esse canal é usado para mensagens institucionais, dúvidas gerais, correções e temas relacionados ao conteúdo do site.`,
+      },
+      {
+        title: "Correções e atualizações",
+        body: "Se você identificou uma informação desatualizada, uma referência incompleta ou um trecho que mereça revisão editorial, envie a URL da página e explique o ponto observado. Isso ajuda a acelerar a análise.",
+      },
+      {
+        title: "Tempo de resposta",
+        body: "Buscamos responder contatos legítimos em prazo razoável, especialmente quando envolvem erros factuais, privacidade, uso de conteúdo, parcerias editoriais ou solicitação de remoção.",
+      },
+      {
+        title: "O que este canal não substitui",
+        body: "O e-mail de contato não substitui atendimento médico, nutricional, fisioterapêutico ou psicológico. Em caso de sintomas, dor intensa, urgência ou necessidade individual, procure um profissional habilitado.",
+      },
+    ],
+    cta: { label: "Conhecer a política editorial", href: "/politica-editorial" },
   },
   "politica-editorial": {
     slug: "politica-editorial",
@@ -171,6 +206,70 @@ export const defaultPages: Record<string, SitePage> = {
       },
     ],
     cta: { label: "Voltar para o blog", href: "/" },
+  },
+  "politica-de-privacidade": {
+    slug: "politica-de-privacidade",
+    eyebrow: "Privacidade e proteção de dados",
+    title: "Política de privacidade",
+    description:
+      "Esta política explica quais dados podem ser tratados pelo Saúde em Foco, em quais situações isso acontece e como você pode exercer seus direitos.",
+    seoTitle: "Política de privacidade",
+    seoDescription: "Saiba como o Saúde em Foco trata dados, cookies e solicitações ligadas à privacidade.",
+    sections: [
+      {
+        title: "Quais dados podem ser tratados",
+        body: "Podemos tratar dados técnicos e de navegação, como páginas acessadas, dispositivo, navegador, preferências salvas localmente e interações agregadas de uso quando você permite estatísticas ou marketing.",
+      },
+      {
+        title: "Cookies e armazenamento local",
+        body: "Usamos recursos técnicos para registrar consentimento, idioma, tema, favoritos, artigos salvos e preferências do site. Cookies não essenciais só devem ser ativados quando houver consentimento correspondente.",
+      },
+      {
+        title: "Analytics, publicidade e terceiros",
+        body: "Quando autorizado, o site pode carregar ferramentas como Google Analytics, Meta Pixel e, futuramente, soluções de publicidade como Google AdSense. Essas integrações podem usar cookies ou identificadores para medição, segurança, prevenção de fraude e personalização conforme a sua escolha.",
+      },
+      {
+        title: "Seus direitos e solicitações",
+        body: `Você pode solicitar esclarecimentos sobre privacidade, correção de informações e revisão de tratamento relacionado ao site pelo e-mail ${contactEmail}. Sempre que aplicável, analisaremos o pedido conforme a legislação vigente.`,
+      },
+      {
+        title: "Atualizações desta política",
+        body: "Esta política pode ser revisada quando houver mudança de ferramenta, base legal, forma de medição, publicidade, segurança ou funcionamento do projeto. Recomendamos consultar esta página periodicamente.",
+      },
+    ],
+    cta: { label: "Gerenciar cookies", href: "/politica-de-cookies" },
+  },
+  "termos-de-uso": {
+    slug: "termos-de-uso",
+    eyebrow: "Regras de uso",
+    title: "Termos de uso",
+    description:
+      "Estes termos estabelecem as condições gerais de acesso e uso dos conteúdos, páginas e recursos oferecidos pelo Saúde em Foco.",
+    seoTitle: "Termos de uso",
+    seoDescription: "Confira as condições de uso dos conteúdos e recursos publicados pelo Saúde em Foco.",
+    sections: [
+      {
+        title: "Uso informativo e educativo",
+        body: "Os conteúdos do site têm finalidade educativa e informativa. Eles não substituem consulta, diagnóstico, prescrição, tratamento ou acompanhamento individual feito por profissional habilitado.",
+      },
+      {
+        title: "Responsabilidade do usuário",
+        body: "Ao usar o site, o leitor concorda em avaliar contexto, limitações e adequação das informações para a própria realidade, buscando orientação profissional quando a decisão envolver sintomas, doença, suplementação, medicação ou risco individual.",
+      },
+      {
+        title: "Propriedade intelectual",
+        body: "Textos, estrutura editorial, identidade visual e materiais originais do projeto não podem ser copiados integralmente, republicados ou distribuídos como se fossem próprios sem autorização, salvo hipóteses legais e citações breves com atribuição adequada.",
+      },
+      {
+        title: "Links, publicidade e parcerias",
+        body: "O site pode exibir links externos, ferramentas de terceiros, publicidade, conteúdos patrocinados ou programas de monetização. Isso não elimina a responsabilidade do leitor de avaliar políticas, ofertas e decisões em ambientes externos.",
+      },
+      {
+        title: "Contato e dúvidas",
+        body: `Para dúvidas institucionais, notificações sobre uso de conteúdo ou temas legais ligados ao site, utilize o canal ${contactEmail}.`,
+      },
+    ],
+    cta: { label: "Falar com a equipe", href: "/contato" },
   },
   "aviso-medico": {
     slug: "aviso-medico",

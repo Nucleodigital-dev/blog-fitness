@@ -44,6 +44,20 @@ export type Article = {
   created_at?: string | null;
 };
 
+export type AuthorProfile = {
+  slug: string;
+  name: string;
+  role: string;
+  shortBio: string;
+  bio: string[];
+  credentials: string[];
+  expertise: string[];
+  note?: string | null;
+  image?: string | null;
+  imageAlt?: string | null;
+  sameAs?: string[];
+};
+
 export type SitemapArticle = {
   slug: string | null;
   created_at: string | null;
@@ -66,6 +80,7 @@ export type SiteSettings = {
   logo?: string | null;
   logoAlt?: string | null;
   footerDescription?: string | null;
+  contactEmail?: string | null;
   navigationItems?: SiteLink[];
   footerColumns?: FooterColumn[];
 };

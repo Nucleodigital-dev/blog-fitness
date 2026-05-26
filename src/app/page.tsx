@@ -3,11 +3,15 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getContentExcerpt } from "@/lib/content-utils";
 import { getAllArticles, getCategories, getSitePage } from "@/lib/content";
-import type { Article } from "@/lib/content-types";
+import type { Article, Category } from "@/lib/content-types";
 import { formatArticleTitle } from "@/lib/text";
 import { FavoriteCategoryButton, ReadingMemory } from "@/components/ReadingMemory";
 
 export const dynamic = "force-dynamic";
+
+function getCategoryHref(slug: string, lang: "pt" | "en") {
+  return `/categoria/${slug}?lang=${lang}`;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getSitePage("home");
@@ -21,6 +25,19 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+function getSidebarCategories(categories: Category[]) {
+  const mainCategorySlugs = [
+    "nutricao-fitness",
+    "treino-fitness",
+    "mentalidade-habitos",
+    "suplementacao-recuperacao",
+  ];
+
+  return categories
+    .filter((cat) => mainCategorySlugs.includes(cat.slug))
+    .sort((a, b) => mainCategorySlugs.indexOf(a.slug) - mainCategorySlugs.indexOf(b.slug));
+}
+
 export default async function Home({
   searchParams,
 }: {
@@ -30,21 +47,14 @@ export default async function Home({
   const lang = params.lang === "en" ? "en" : "pt";
   const categorySlug = params.category;
   const isEn = lang === "en";
+
   const [allArticles, categories, page] = await Promise.all([
     getAllArticles(),
     getCategories(),
     getSitePage("home"),
   ]);
 
-  const mainCategorySlugs = [
-    "nutricao-fitness",
-    "treino-fitness",
-    "mentalidade-habitos",
-    "suplementacao-recuperacao",
-  ];
-  const sidebarCategories = categories
-    .filter((cat) => mainCategorySlugs.includes(cat.slug))
-    .sort((a, b) => mainCategorySlugs.indexOf(a.slug) - mainCategorySlugs.indexOf(b.slug));
+  const sidebarCategories = getSidebarCategories(categories);
 
   let displayedArticles = allArticles;
   let categoryName = "";
@@ -69,7 +79,10 @@ export default async function Home({
   const latestArticle = allArticles[0]
     ? {
         slug: allArticles[0].slug,
-        title: formatArticleTitle(isEn && allArticles[0].title_en ? allArticles[0].title_en : allArticles[0].title_pt, lang),
+        title: formatArticleTitle(
+          isEn && allArticles[0].title_en ? allArticles[0].title_en : allArticles[0].title_pt,
+          lang
+        ),
         href: `/blog/${allArticles[0].slug}?lang=${lang}`,
         image: allArticles[0].cover_image,
         createdAt: allArticles[0].created_at,
@@ -84,11 +97,7 @@ export default async function Home({
         ) : (
           <>
             <h1>{isEn ? page?.titleEn || page?.title : page?.title}</h1>
-            <p>
-              {isEn
-                ? page?.descriptionEn || page?.description
-                : page?.description}
-            </p>
+            <p>{isEn ? page?.descriptionEn || page?.description : page?.description}</p>
           </>
         )}
       </div>
@@ -119,6 +128,7 @@ export default async function Home({
               <p>{new Date(featuredArticles[0].created_at || "").toLocaleDateString(isEn ? "en-US" : "pt-BR")}</p>
             </Link>
           )}
+
           <div className="featured-side">
             {featuredArticles.slice(1, 3).map((article) => (
               <Link href={`/blog/${article.slug}?lang=${lang}`} key={article.id} className="featured-side-item">
@@ -140,6 +150,7 @@ export default async function Home({
       <div className="layout-with-sidebar">
         <div>
           {categorySlug && <h2 style={{ marginBottom: 32, fontSize: "2rem" }}>Últimos artigos</h2>}
+
           <div className="article-grid">
             {regularArticles.map((article) => {
               const title = formatArticleTitle(isEn && article.title_en ? article.title_en : article.title_pt, lang);
@@ -174,6 +185,7 @@ export default async function Home({
                 </Link>
               );
             })}
+
             {regularArticles.length === 0 && (
               <div style={{ padding: "64px 0", color: "var(--text-muted)" }}>
                 <p>{isEn ? "No articles published yet." : "Nenhum artigo publicado ainda."}</p>
@@ -187,9 +199,10 @@ export default async function Home({
           <div>
             {sidebarCategories.map((cat) => {
               const count = allArticles.filter((article) => article.category_id === cat.id).length;
+
               return (
                 <div key={cat.id} className="category-preference-row">
-                  <Link href={`/?category=${cat.slug}&lang=${lang}`} className="category-pill">
+                  <Link href={getCategoryHref(cat.slug, lang)} className="category-pill">
                     <span>{isEn && cat.name_en ? cat.name_en : cat.name_pt}</span>
                     <span
                       style={{

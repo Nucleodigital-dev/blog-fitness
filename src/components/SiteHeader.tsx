@@ -34,7 +34,7 @@ function isActivePath(pathname: string, href: string) {
 
 function resolveHref(item: NavItem) {
   if (item.href) return item.href;
-  if (item.categorySlug) return `/?category=${item.categorySlug}`;
+  if (item.categorySlug) return `/categoria/${item.categorySlug}`;
   return "/";
 }
 
@@ -73,7 +73,7 @@ export function SiteHeader({ categories, navigationItems, logo, logoAlt }: SiteH
                     <ChevronDown size={16} aria-hidden="true" />
                     <div className="dropdown-menu">
                       {subcategories.map((sub) => (
-                        <Link key={sub.id} href={`/?category=${sub.slug}`}>
+                        <Link key={sub.id} href={`/categoria/${sub.slug}`}>
                           {sub.name_pt}
                         </Link>
                       ))}
@@ -130,7 +130,7 @@ export function SiteHeader({ categories, navigationItems, logo, logoAlt }: SiteH
                       Ver todos
                     </Link>
                     {subcategories.map((sub) => (
-                      <Link key={sub.id} href={`/?category=${sub.slug}`} onClick={closeMenu}>
+                      <Link key={sub.id} href={`/categoria/${sub.slug}`} onClick={closeMenu}>
                         {sub.name_pt}
                       </Link>
                     ))}

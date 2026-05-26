@@ -99,7 +99,7 @@ export default async function RootLayout({
                   <h3 style={{ marginBottom: 16, color: "var(--foreground)" }}>{column.title}</h3>
                   <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
                     {column.links.map((link) => {
-                      const href = link.href || (link.categorySlug ? `/?category=${link.categorySlug}` : "/");
+                      const href = link.href || (link.categorySlug ? `/categoria/${link.categorySlug}` : "/");
                       return (
                         <li key={`${column.title}-${link.label}-${href}`}>
                           <Link href={href}>{link.label}</Link>

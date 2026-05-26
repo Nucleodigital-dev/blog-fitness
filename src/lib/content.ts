@@ -63,6 +63,11 @@ export async function getCategories(): Promise<Category[]> {
   }
 }
 
+export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+  const categories = await getCategories();
+  return categories.find((category) => category.slug === slug) || null;
+}
+
 export async function getAllArticles(): Promise<Article[]> {
   const supabase = await getSupabase();
   if (!supabase) return [];

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Clock, Calendar, Info, AlertTriangle, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
+import { Clock, Calendar, Info, AlertTriangle, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
 import type { Metadata } from "next";
 import { marked } from "marked";
 import Image from "next/image";
@@ -9,6 +9,8 @@ import { formatArticleTitle } from "@/lib/text";
 import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
 import { getArticleSupplement } from "@/lib/article-supplements";
 import { ArticleEngagement } from "@/components/ArticleEngagement";
+import { AuthorCard } from "@/components/AuthorCard";
+import { getDefaultAuthor } from "@/lib/authors";
 
 export const dynamic = "force-dynamic";
 
@@ -222,7 +224,7 @@ export async function generateMetadata({ params, searchParams }: BlogPostProps):
       locale: isEn ? "en_US" : "pt_BR",
       type: "article",
       publishedTime: article.created_at || undefined,
-      authors: [organizationName],
+      authors: [getDefaultAuthor().name],
     },
     twitter: {
       card: "summary_large_image",
@@ -279,6 +281,7 @@ export default async function BlogPost({
   const otherBlocks = blocksArray.filter(b => b.type !== 'quick_answer');
 
   const related = await getRelatedArticles(article.id, article.category_id);
+  const author = getDefaultAuthor();
 
   const canonicalUrl = absoluteUrl(`/blog/${slug}`);
   const articleDescription = getMetaDescription(contentRaw);
@@ -297,6 +300,17 @@ export default async function BlogPost({
         logo: absoluteUrl("/logo.png"),
       },
       {
+        "@type": "Person",
+        "@id": `${siteUrl}/autor/${author.slug}#person`,
+        name: author.name,
+        description: author.shortBio,
+        url: absoluteUrl(`/autor/${author.slug}`),
+        jobTitle: author.role,
+        worksFor: {
+          "@id": `${siteUrl}/#organization`,
+        },
+      },
+      {
         "@type": "BreadcrumbList",
         "@id": `${canonicalUrl}#breadcrumb`,
         itemListElement: [
@@ -312,7 +326,7 @@ export default async function BlogPost({
                   "@type": "ListItem",
                   position: 2,
                   name: catName,
-                  item: absoluteUrl(`/?category=${article.cat_slug || article.category_id}`),
+                  item: absoluteUrl(`/categoria/${article.cat_slug || article.category_id}`),
                 },
               ]
             : []),
@@ -333,9 +347,7 @@ export default async function BlogPost({
         datePublished: article.created_at,
         dateModified: article.created_at,
         author: {
-          "@type": "Organization",
-          name: organizationName,
-          url: siteUrl,
+          "@id": `${siteUrl}/autor/${author.slug}#person`,
         },
         publisher: {
           "@id": `${siteUrl}/#organization`,
@@ -459,13 +471,16 @@ export default async function BlogPost({
             <ChevronRight size={14} />
             {catName && (
               <>
-                <Link href={`/?category=${article.cat_slug || article.category_id}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>{catName}</Link>
+                <Link href={`/categoria/${article.cat_slug || article.category_id}?lang=${lang}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>{catName}</Link>
                 <ChevronRight size={14} />
               </>
             )}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} /> {readingTime}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={14} /> {copy.updated}: {new Date(article.created_at).toLocaleDateString('pt-BR')}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 6, fontWeight: 600 }}><BookOpen size={14} /> {copy.educational}</span>
+            <Link href={`/autor/${author.slug}`} style={{ color: 'var(--primary)', fontWeight: 700 }}>
+              {author.name}
+            </Link>
           </div>
 
           <ArticleEngagement
@@ -596,6 +611,10 @@ export default async function BlogPost({
               })}
             </div>
           )}
+        </div>
+
+        <div style={{ marginTop: 56 }}>
+          <AuthorCard author={author} compact />
         </div>
 
         <hr style={{ margin: '64px 0', borderColor: 'var(--border)' }} />

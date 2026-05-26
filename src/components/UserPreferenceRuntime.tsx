@@ -110,7 +110,7 @@ export function UserPreferenceRuntime() {
     const preferences = readStoredPrivacyPreferences();
     if (!preferences?.preferences) return;
     if (searchParams.get("lang")) return;
-    if (pathname !== "/" && !pathname.startsWith("/blog/")) return;
+    if (pathname !== "/" && !pathname.startsWith("/blog/") && !pathname.startsWith("/categoria/")) return;
 
     const storedLanguage = localStorage.getItem(LANGUAGE_KEY);
     if (storedLanguage !== "pt" && storedLanguage !== "en") return;
