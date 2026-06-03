@@ -61,6 +61,7 @@ export type AuthorProfile = {
 export type SitemapArticle = {
   slug: string | null;
   created_at: string | null;
+  cover_image?: string | null;
 };
 
 export type SiteLink = {

@@ -9,7 +9,7 @@ import { UserPreferenceRuntime } from "@/components/UserPreferenceRuntime";
 import { getCategories, getSiteSettings } from "@/lib/content";
 import type { Category } from "@/lib/content-types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
@@ -31,6 +31,8 @@ export async function generateMetadata(): Promise<Metadata> {
         {
           url: absoluteUrl(logo),
           alt: settings.logoAlt || title,
+          width: 1200,
+          height: 630,
         },
       ],
       locale: "pt_BR",
@@ -45,9 +47,20 @@ export async function generateMetadata(): Promise<Metadata> {
     robots: {
       index: true,
       follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-snippet": -1,
+        "max-image-preview": "large",
+        "max-video-preview": -1,
+      },
     },
     title: `${title} | Blog focado em SEO`,
     description,
+    keywords: ["saúde", "fitness", "nutrição", "treino", "bem-estar", "emagrecimento", "musculação", "alimentação saudável"],
+    authors: [{ name: title, url: siteUrl }],
+    creator: title,
+    publisher: title,
   };
 }
 
@@ -65,6 +78,55 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-BR">
+      <head>
+        {/* Preconnect para acelerar carregamento de recursos externos */}
+        <link rel="preconnect" href="https://uwdgofppflpvwshxmrsr.supabase.co" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://uwdgofppflpvwshxmrsr.supabase.co" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "@id": `${siteUrl}/#organization`,
+              name: settings.title || siteName,
+              url: siteUrl,
+              logo: {
+                "@type": "ImageObject",
+                url: absoluteUrl(settings.logo || "/logo.png"),
+              },
+              description: settings.description || siteDescription,
+              inLanguage: "pt-BR",
+              sameAs: [
+                "https://www.instagram.com/saudeemfoco",
+              ],
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "@id": `${siteUrl}/#website`,
+              url: siteUrl,
+              name: settings.title || siteName,
+              description: settings.description || siteDescription,
+              inLanguage: "pt-BR",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: `${siteUrl}/?q={search_term_string}`,
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
+      </head>
       <body>
         <SiteHeader
           categories={categories}

@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
-import { siteUrl } from "@/lib/site";
+import { absoluteUrl, siteUrl } from "@/lib/site";
 import { getCategories, getSitemapArticles } from "@/lib/content";
 import { hasArticleSupplement, supplementalContentUpdatedAt } from "@/lib/article-supplements";
 import { getAllAuthors } from "@/lib/authors";
+import type { SitemapArticle } from "@/lib/content-types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [articles, categories] = await Promise.all([getSitemapArticles(), getCategories()]);
@@ -70,23 +71,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           ? new Date(article.created_at)
           : new Date();
 
-      return {
-        url: `${siteUrl}/blog/${encodeURIComponent(article.slug!)}`,
+      const baseEntry = {
+        url: `${siteUrl}/blog/${article.slug!}`,
         lastModified,
-        changeFrequency: "weekly",
+        changeFrequency: "weekly" as const,
         priority: 0.8,
       };
+
+      // Adiciona imagem de capa ao sitemap para indexação no Google Images
+      if (article.cover_image) {
+        return { ...baseEntry, images: [absoluteUrl(article.cover_image)] };
+      }
+
+      return baseEntry;
     });
 
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${siteUrl}/categoria/${encodeURIComponent(category.slug)}`,
+    url: `${siteUrl}/categoria/${category.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly",
     priority: 0.7,
   }));
 
   const authorRoutes: MetadataRoute.Sitemap = authors.map((author) => ({
-    url: `${siteUrl}/autor/${encodeURIComponent(author.slug)}`,
+    url: `${siteUrl}/autor/${author.slug}`,
     lastModified: new Date(),
     changeFrequency: "monthly",
     priority: 0.6,

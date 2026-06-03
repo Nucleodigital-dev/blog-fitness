@@ -52,8 +52,8 @@ export const defaultPages: Record<string, SitePage> = {
       "Descubra estratégias baseadas em ciência para ganho de massa, perda de gordura e uma vida mais saudável.",
     descriptionEn:
       "Discover science-based strategies for muscle building, fat loss, and living a healthier lifestyle.",
-    seoTitle: "Saúde em Foco | Blog focado em SEO",
-    seoDescription: "Os melhores artigos sobre saúde, fitness e bem-estar.",
+    seoTitle: "Saúde em Foco | Fitness, Nutrição e Bem-Estar com Base Científica",
+    seoDescription: "Guias práticos sobre treino, nutrição, emagrecimento, musculação e suplementação. Conteúdo educativo com base em ciência para sua rotina fitness.",
   },
   sobre: {
     slug: "sobre",

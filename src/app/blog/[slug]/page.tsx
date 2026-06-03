@@ -4,15 +4,16 @@ import { Clock, Calendar, Info, AlertTriangle, CheckCircle2, ChevronRight, BookO
 import type { Metadata } from "next";
 import { marked } from "marked";
 import Image from "next/image";
-import { absoluteUrl, organizationName, siteName, siteUrl } from "@/lib/site";
+import { absoluteUrl, siteName, siteUrl } from "@/lib/site";
 import { formatArticleTitle } from "@/lib/text";
-import { getArticleBySlug, getRelatedArticles } from "@/lib/content";
-import { getArticleSupplement } from "@/lib/article-supplements";
+import { getArticleBySlug, getRelatedArticles, getSitemapArticles } from "@/lib/content";
+import { getArticleSupplement, hasArticleSupplement, supplementalContentUpdatedAt } from "@/lib/article-supplements";
 import { ArticleEngagement } from "@/components/ArticleEngagement";
 import { AuthorCard } from "@/components/AuthorCard";
 import { getDefaultAuthor } from "@/lib/authors";
+import type { Article } from "@/lib/content-types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 type BlogPostProps = {
   params: Promise<{ slug: string }>;
@@ -153,7 +154,7 @@ function resolveLang(searchParams: { lang?: string | string[] }) {
   return lang === "en" ? "en" : "pt";
 }
 
-function hasUsableEnglish(article: any) {
+function hasUsableEnglish(article: Article) {
   const content = getPlainArticleText(article.content_en);
   return Boolean(
     article.title_en?.trim() &&
@@ -162,14 +163,14 @@ function hasUsableEnglish(article: any) {
   );
 }
 
-function getLocalizedTitle(article: any, isEn: boolean, hasEnglish: boolean) {
+function getLocalizedTitle(article: Article, isEn: boolean, hasEnglish: boolean) {
   return formatArticleTitle(
     isEn && hasEnglish && article.title_en ? article.title_en : article.title_pt,
     isEn ? "en" : "pt"
   );
 }
 
-function getLocalizedContent(article: any, isEn: boolean, hasEnglish: boolean) {
+function getLocalizedContent(article: Article, isEn: boolean, hasEnglish: boolean) {
   if (isEn) return hasEnglish ? article.content_en : englishUnavailableContent;
   return article.content_pt;
 }
@@ -200,9 +201,20 @@ export async function generateMetadata({ params, searchParams }: BlogPostProps):
   const canonicalPath = `/blog/${article.slug}`;
   const image = getArticleImage(article.cover_image);
 
+  // Gera keywords baseadas na categoria e título do artigo
+  const catName = isEn && article.cat_name_en ? article.cat_name_en : article.cat_name_pt;
+  const baseKeywords = ["saúde", "fitness", "bem-estar"];
+  if (catName) baseKeywords.unshift(catName.toLowerCase());
+
+  // Data de modificação: usa data do suplemento quando o artigo foi enriquecido
+  const dateModified = hasArticleSupplement(article.slug)
+    ? supplementalContentUpdatedAt
+    : article.created_at || undefined;
+
   return {
     title: `${title} | Saúde em Foco`,
     description,
+    keywords: baseKeywords,
     alternates: {
       canonical: canonicalPath,
       languages: {
@@ -219,12 +231,16 @@ export async function generateMetadata({ params, searchParams }: BlogPostProps):
         {
           url: image,
           alt: article.cover_alt || title,
+          width: 1200,
+          height: 630,
         },
       ],
       locale: isEn ? "en_US" : "pt_BR",
       type: "article",
       publishedTime: article.created_at || undefined,
+      modifiedTime: dateModified,
       authors: [getDefaultAuthor().name],
+      section: catName || undefined,
     },
     twitter: {
       card: "summary_large_image",
@@ -233,6 +249,11 @@ export async function generateMetadata({ params, searchParams }: BlogPostProps):
       images: [image],
     },
   };
+}
+
+export async function generateStaticParams() {
+  const articles = await getSitemapArticles();
+  return articles.filter((article) => article.slug).map((article) => ({ slug: article.slug! }));
 }
 
 // --- Premium Block Components ---
@@ -259,7 +280,7 @@ export default async function BlogPost({
   const isEn = lang === "en";
   const copy = uiCopy[lang];
 
-  const article: any = await getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug);
 
   if (!article) notFound();
 
@@ -289,16 +310,16 @@ export default async function BlogPost({
   const faqBlocks = blocksArray.filter((block) => block.type === "faq" && block.faqs?.length);
   const faqItems = faqBlocks.flatMap((block) => block.faqs || []);
   const citations = getReferenceLines(blocksArray);
+  const wordCount = getPlainArticleText(contentRaw).split(/\s+/).filter(Boolean).length;
+
+  // Data de modificação: usa data do suplemento quando o artigo foi enriquecido
+  const articleDateModified = hasArticleSupplement(slug)
+    ? supplementalContentUpdatedAt
+    : article.created_at || undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "Organization",
-        "@id": `${siteUrl}/#organization`,
-        name: organizationName,
-        url: siteUrl,
-        logo: absoluteUrl("/logo.png"),
-      },
       {
         "@type": "Person",
         "@id": `${siteUrl}/autor/${author.slug}#person`,
@@ -343,9 +364,14 @@ export default async function BlogPost({
         "@id": `${canonicalUrl}#article`,
         headline: title,
         description: articleDescription,
-        image: articleImage,
+        image: {
+          "@type": "ImageObject",
+          url: articleImage,
+          alt: article.cover_alt || title,
+        },
         datePublished: article.created_at,
-        dateModified: article.created_at,
+        dateModified: articleDateModified,
+        wordCount,
         author: {
           "@id": `${siteUrl}/autor/${author.slug}#person`,
         },
@@ -356,6 +382,9 @@ export default async function BlogPost({
         inLanguage: isEn ? "en-US" : "pt-BR",
         articleSection: catName || undefined,
         citation: citations.length > 0 ? citations : undefined,
+        isPartOf: {
+          "@id": `${siteUrl}/#website`,
+        },
       },
       ...(faqItems.length > 0
         ? [
@@ -476,7 +505,7 @@ export default async function BlogPost({
               </>
             )}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} /> {readingTime}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={14} /> {copy.updated}: {new Date(article.created_at).toLocaleDateString('pt-BR')}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Calendar size={14} /> {copy.updated}: {article.created_at ? new Date(article.created_at).toLocaleDateString('pt-BR') : ''}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: 6, fontWeight: 600 }}><BookOpen size={14} /> {copy.educational}</span>
             <Link href={`/autor/${author.slug}`} style={{ color: 'var(--primary)', fontWeight: 700 }}>
               {author.name}
@@ -542,7 +571,7 @@ export default async function BlogPost({
               )}
 
               {/* Renderização dos Blocos Dinâmicos */}
-              {otherBlocks.map((block: any, i: number) => {
+              {otherBlocks.map((block, i) => {
                  if (!block.content && !block.faqs) return null;
                  
                  const sectionId = `block-${i}`;
@@ -577,9 +606,9 @@ export default async function BlogPost({
                  if (block.type === 'faq' && block.faqs) {
                    return (
                      <div key={i} id={sectionId} style={{ marginBottom: 48 }}>
-                       <SectionHeader preTitle="Tire suas dúvidas" title={block.title} />
+                       <SectionHeader preTitle="Tire suas dúvidas" title={block.title ?? ''} />
                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                         {block.faqs.map((faq: any, idx: number) => (
+                         {block.faqs.map((faq, idx: number) => (
                            <details key={idx} className="faq-details">
                              <summary style={{ padding: '24px', fontSize: '1.15rem', fontWeight: 600, cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                {faq.q}
@@ -604,7 +633,7 @@ export default async function BlogPost({
 
                  return (
                    <div key={i} id={sectionId} style={{ marginBottom: 48 }}>
-                     <SectionHeader preTitle={preTitle} title={block.title} />
+                     <SectionHeader preTitle={preTitle} title={block.title ?? ''} />
                      <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : renderMarkdown(block.content) }} />
                    </div>
                  );
@@ -624,7 +653,7 @@ export default async function BlogPost({
           <h3 style={{ fontSize: '1.75rem', marginBottom: 32, color: 'var(--foreground)' }}>{isEn ? "Keep Reading" : "Próximos Passos recomendados"}</h3>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-            {related.map(rel => {
+            {related.map((rel) => {
                 const relTitle = formatArticleTitle(isEn && rel.title_en ? rel.title_en : rel.title_pt, lang);
                 return (
                   <Link href={`/blog/${rel.slug}?lang=${lang}`} key={rel.id} style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', background: 'var(--card-bg)' }} className="related-card-premium">

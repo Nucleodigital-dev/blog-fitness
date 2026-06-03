@@ -1,5 +1,4 @@
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { defaultPages, defaultSiteSettings } from "./default-content";
 import type { Article, Category, SitePage, SiteSettings, SitemapArticle } from "./content-types";
 
@@ -7,18 +6,19 @@ const hasSupabaseConfig = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 );
 
+const publicSupabase = hasSupabaseConfig
+  ? createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    )
+  : null;
+
 const categoryNameOverrides: Record<string, Pick<Category, "name_pt" | "name_en">> = {
   "nutricao-fitness": { name_pt: "Nutrição Fitness", name_en: "Fitness Nutrition" },
   "treino-fitness": { name_pt: "Treino Fitness", name_en: "Fitness Training" },
   "mentalidade-habitos": { name_pt: "Mentalidade e Hábitos", name_en: "Mindset and Habits" },
   "suplementacao-recuperacao": { name_pt: "Suplementação e Recuperação", name_en: "Supplements and Recovery" },
 };
-
-async function getSupabase() {
-  if (!hasSupabaseConfig) return null;
-  const cookieStore = await cookies();
-  return createClient(cookieStore);
-}
 
 function normalizeCategory(category: Category): Category {
   const override = categoryNameOverrides[category.slug];
@@ -50,11 +50,10 @@ async function withCategories(articles: Article[]) {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const supabase = await getSupabase();
-  if (!supabase) return [];
+  if (!publicSupabase) return [];
 
   try {
-    const { data, error } = await supabase.from("categories").select("*").order("name_pt", { ascending: true });
+    const { data, error } = await publicSupabase.from("categories").select("*").order("name_pt", { ascending: true });
     if (error) throw error;
     return (data || []).map(normalizeCategory);
   } catch (error) {
@@ -69,11 +68,10 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
 }
 
 export async function getAllArticles(): Promise<Article[]> {
-  const supabase = await getSupabase();
-  if (!supabase) return [];
+  if (!publicSupabase) return [];
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await publicSupabase
       .from("articles")
       .select(
         "id, slug, title_pt, title_en, content_pt, content_en, cover_image, cover_alt, category_id, is_featured, status, created_at"
@@ -89,11 +87,10 @@ export async function getAllArticles(): Promise<Article[]> {
 }
 
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  const supabase = await getSupabase();
-  if (!supabase) return null;
+  if (!publicSupabase) return null;
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await publicSupabase
       .from("articles")
       .select(
         "id, slug, title_pt, title_en, content_pt, content_en, cover_image, cover_alt, category_id, is_featured, status, created_at"
@@ -111,11 +108,10 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
 }
 
 export async function getRelatedArticles(articleId: string, categoryId?: string | null): Promise<Article[]> {
-  const supabase = await getSupabase();
-  if (!supabase) return [];
+  if (!publicSupabase) return [];
 
   try {
-    let query = supabase
+    let query = publicSupabase
       .from("articles")
       .select(
         "id, slug, title_pt, title_en, content_pt, content_en, cover_image, cover_alt, category_id, is_featured, status, created_at"
@@ -133,7 +129,7 @@ export async function getRelatedArticles(articleId: string, categoryId?: string 
 
     if (!categoryId) return [];
 
-    const { data: latest, error: latestError } = await supabase
+    const { data: latest, error: latestError } = await publicSupabase
       .from("articles")
       .select(
         "id, slug, title_pt, title_en, content_pt, content_en, cover_image, cover_alt, category_id, is_featured, status, created_at"
@@ -151,13 +147,12 @@ export async function getRelatedArticles(articleId: string, categoryId?: string 
 }
 
 export async function getSitemapArticles(): Promise<SitemapArticle[]> {
-  const supabase = await getSupabase();
-  if (!supabase) return [];
+  if (!publicSupabase) return [];
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await publicSupabase
       .from("articles")
-      .select("slug, created_at")
+      .select("slug, created_at, cover_image")
       .eq("status", "published")
       .order("created_at", { ascending: false });
     if (error) throw error;
