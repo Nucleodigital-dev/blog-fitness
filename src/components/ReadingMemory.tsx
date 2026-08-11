@@ -10,7 +10,6 @@ import {
   LATEST_ARTICLE_NOTIFIED_KEY,
   LATEST_ARTICLE_SEEN_KEY,
   PrivacyPreferences,
-  RECENT_ARTICLES_KEY,
   SAVED_ARTICLES_KEY,
   dispatchPreferenceUpdate,
   readStoredPrivacyPreferences,
@@ -44,7 +43,6 @@ function allowsNotifications(preferences: PrivacyPreferences | null) {
 
 export function ReadingMemory({ latestArticle }: ReadingMemoryProps) {
   const [savedArticles, setSavedArticles] = useState<StoredArticle[]>([]);
-  const [recentArticles, setRecentArticles] = useState<StoredArticle[]>([]);
   const [showLatestNotice, setShowLatestNotice] = useState(false);
   const [memoryAllowed, setMemoryAllowed] = useState(false);
 
@@ -55,13 +53,11 @@ export function ReadingMemory({ latestArticle }: ReadingMemoryProps) {
 
     if (!canRemember) {
       setSavedArticles([]);
-      setRecentArticles([]);
       setShowLatestNotice(false);
       return;
     }
 
     setSavedArticles(readArticles(SAVED_ARTICLES_KEY));
-    setRecentArticles(readArticles(RECENT_ARTICLES_KEY));
 
     if (!latestArticle) {
       setShowLatestNotice(false);
@@ -97,12 +93,7 @@ export function ReadingMemory({ latestArticle }: ReadingMemoryProps) {
     };
   }, [refresh]);
 
-  const displayArticles = useMemo(() => {
-    const recentOnly = recentArticles.filter(
-      (recent) => !savedArticles.some((saved) => saved.slug === recent.slug)
-    );
-    return { saved: savedArticles.slice(0, 3), recent: recentOnly.slice(0, 3) };
-  }, [recentArticles, savedArticles]);
+  const savedForLater = useMemo(() => savedArticles.slice(0, 3), [savedArticles]);
 
   const dismissLatestNotice = () => {
     if (latestArticle) {
@@ -136,14 +127,9 @@ export function ReadingMemory({ latestArticle }: ReadingMemoryProps) {
         </div>
       )}
 
-      {memoryAllowed && (displayArticles.saved.length > 0 || displayArticles.recent.length > 0) && (
+      {memoryAllowed && savedForLater.length > 0 && (
         <div className="reading-memory-grid">
-          {displayArticles.saved.length > 0 && (
-            <ReadingList title="Salvos para depois" articles={displayArticles.saved} />
-          )}
-          {displayArticles.recent.length > 0 && (
-            <ReadingList title="Vistos recentemente" articles={displayArticles.recent} />
-          )}
+          <ReadingList title="Salvos para depois" articles={savedForLater} />
         </div>
       )}
     </section>
