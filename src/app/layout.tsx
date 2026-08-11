@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import { absoluteUrl, siteDescription, siteName, siteUrl } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ConsentCenter } from "@/components/ConsentCenter";
@@ -98,9 +99,6 @@ export default async function RootLayout({
               },
               description: settings.description || siteDescription,
               inLanguage: "pt-BR",
-              sameAs: [
-                "https://www.instagram.com/saudeemfoco",
-              ],
             }),
           }}
         />
@@ -115,29 +113,15 @@ export default async function RootLayout({
               name: settings.title || siteName,
               description: settings.description || siteDescription,
               inLanguage: "pt-BR",
-              potentialAction: {
-                "@type": "SearchAction",
-                target: {
-                  "@type": "EntryPoint",
-                  urlTemplate: `${siteUrl}/?q={search_term_string}`,
-                },
-                "query-input": "required name=search_term_string",
-              },
             }),
           }}
         />
       </head>
       <body>
-        <SiteHeader
-          categories={categories}
-          navigationItems={settings.navigationItems || []}
-          logo={logo}
-          logoAlt={logoAlt}
-        />
+        <Suspense fallback={null}><SiteHeader categories={categories} navigationItems={settings.navigationItems || []} logo={logo} logoAlt={logoAlt} /></Suspense>
 
         <main className="container">{children}</main>
-        <UserPreferenceRuntime />
-        <ConsentCenter />
+        <Suspense fallback={null}><UserPreferenceRuntime /><ConsentCenter /></Suspense>
 
         <footer className="footer">
           <div className="container">

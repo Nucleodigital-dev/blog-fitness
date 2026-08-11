@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { AuthorProfile } from "@/lib/content-types";
 
 type AuthorCardProps = {
@@ -44,7 +45,9 @@ export function AuthorCard({ author, compact = false }: AuthorCardProps) {
           fontWeight: 800,
         }}
       >
-        {getInitials(author.name)}
+        {author.image ? (
+          <Image src={author.image} alt={author.imageAlt || `Foto de ${author.name}`} width={compact ? 72 : 96} height={compact ? 72 : 96} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : getInitials(author.name)}
       </div>
 
       <div>

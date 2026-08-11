@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    { url: `${siteUrl}/quem-escreve`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     {
       url: `${siteUrl}/contato`,
       lastModified: new Date(),
