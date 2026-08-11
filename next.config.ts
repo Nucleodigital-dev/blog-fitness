@@ -49,15 +49,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async redirects() {
-    return [
-      {
-        source: "/blog/dor-no-joelho-ao-subir-escadas",
-        destination: "/blog/dor-no-joelho-ao-subir-escadas-o-que-pode-ser-e-como-aliviar-com-seguranca",
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
