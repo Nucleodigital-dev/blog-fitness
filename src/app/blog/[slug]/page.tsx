@@ -646,6 +646,43 @@ export default async function BlogPost({
           <AuthorCard author={author} compact />
         </div>
 
+        <aside
+          aria-label={isEn ? "Editorial and health notice" : "Transparência editorial e aviso de saúde"}
+          style={{
+            marginTop: 20,
+            padding: 24,
+            borderRadius: 16,
+            border: "1px solid #bfdbfe",
+            background: "#eff6ff",
+            color: "#1e3a5f",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <Info size={22} style={{ flex: "0 0 auto", marginTop: 2 }} />
+            <div>
+              <h2 style={{ margin: "0 0 8px", fontSize: "1.15rem" }}>
+                {isEn ? "Editorial transparency" : "Transparência editorial"}
+              </h2>
+              <p style={{ margin: 0, lineHeight: 1.65 }}>
+                {isEn
+                  ? "This educational article is signed by the author shown above. Topics involving symptoms, diagnosed conditions, medication, pregnancy, supplements, injury risk, or individual decisions require technical review appropriate to the subject before being presented as health guidance."
+                  : "Este conteúdo educativo é assinado pela pessoa autora indicada acima. Pautas que envolvem sintomas, doenças diagnosticadas, medicamentos, gestação, suplementação, risco de lesão ou decisões individuais exigem revisão técnica compatível com o tema antes de serem tratadas como orientação de saúde."}
+              </p>
+              <p style={{ margin: "12px 0 0", lineHeight: 1.65 }}>
+                {isEn ? "Read our " : "Leia a "}
+                <Link href="/politica-editorial" style={{ fontWeight: 700 }}>
+                  {isEn ? "editorial policy" : "política editorial"}
+                </Link>
+                {isEn ? " and the " : " e o "}
+                <Link href="/aviso-medico" style={{ fontWeight: 700 }}>
+                  {isEn ? "medical notice" : "aviso médico"}
+                </Link>
+                {isEn ? "." : "."}
+              </p>
+            </div>
+          </div>
+        </aside>
+
         <hr style={{ margin: '64px 0', borderColor: 'var(--border)' }} />
 
         {/* Premium Related Articles */}
