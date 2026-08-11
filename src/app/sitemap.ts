@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl, siteUrl } from "@/lib/site";
-import { getCategories, getSitemapArticles } from "@/lib/content";
+import { getAllArticles, getCategories, getSitemapArticles } from "@/lib/content";
 import { hasArticleSupplement, supplementalContentUpdatedAt } from "@/lib/article-supplements";
 import { getAllAuthors } from "@/lib/authors";
 import type { SitemapArticle } from "@/lib/content-types";
@@ -8,7 +8,7 @@ import type { SitemapArticle } from "@/lib/content-types";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [articles, categories] = await Promise.all([getSitemapArticles(), getCategories()]);
+  const [articles, categories, publishedArticles] = await Promise.all([getSitemapArticles(), getCategories(), getAllArticles()]);
   const authors = getAllAuthors();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -87,12 +87,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return baseEntry;
     });
 
-  const categoryRoutes: MetadataRoute.Sitemap = categories.map((category) => ({
-    url: `${siteUrl}/categoria/${category.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  const publishedCategoryIds = new Set(
+    publishedArticles.map((article) => article.category_id).filter((id): id is string => Boolean(id))
+  );
+  const categoryRoutes: MetadataRoute.Sitemap = categories
+    .filter((category) => publishedCategoryIds.has(category.id))
+    .map((category) => ({
+      url: siteUrl + "/categoria/" + category.slug,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
 
   const authorRoutes: MetadataRoute.Sitemap = authors.map((author) => ({
     url: `${siteUrl}/autor/${author.slug}`,
