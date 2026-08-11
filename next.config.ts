@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: "uwdgofppflpvwshxmrsr.supabase.co",
         pathname: "/storage/**",
       },
+      {
+        protocol: "https",
+        hostname: "saudeemfoco.nucleodigitalofc.com",
+        pathname: "/covers/**",
+      },
     ],
   },
   async headers() {
