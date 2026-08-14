@@ -3,9 +3,8 @@ import { absoluteUrl, siteUrl } from "@/lib/site";
 import { getAllArticles, getCategories, getSitemapArticles } from "@/lib/content";
 import { hasArticleSupplement, supplementalContentUpdatedAt } from "@/lib/article-supplements";
 import { getAllAuthors } from "@/lib/authors";
-import type { SitemapArticle } from "@/lib/content-types";
 
-export const revalidate = 3600;
+export const revalidate = 900;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [articles, categories, publishedArticles] = await Promise.all([getSitemapArticles(), getCategories(), getAllArticles()]);

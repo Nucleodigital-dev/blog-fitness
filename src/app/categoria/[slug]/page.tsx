@@ -8,7 +8,7 @@ import { getContentExcerpt } from "@/lib/content-utils";
 import { absoluteUrl, siteName } from "@/lib/site";
 import { formatArticleTitle } from "@/lib/text";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 900;
 
 type CategoryPageProps = {
   params: Promise<{ slug: string }>;

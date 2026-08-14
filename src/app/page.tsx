@@ -7,7 +7,9 @@ import type { Article, Category } from "@/lib/content-types";
 import { formatArticleTitle } from "@/lib/text";
 import { FavoriteCategoryButton, ReadingMemory } from "@/components/ReadingMemory";
 
-export const dynamic = "force-dynamic";
+// Cache public listing pages at the edge while keeping the publication cadence
+// close to real time. This removes an unnecessary database round-trip per view.
+export const revalidate = 900;
 
 function getCategoryHref(slug: string, lang: "pt" | "en") {
   return `/categoria/${slug}?lang=${lang}`;
@@ -166,7 +168,7 @@ export default async function Home({
                 >
                   {article.cover_image && (
                     <div style={{ width: "100%", height: 240, position: "relative" }}>
-                      <Image src={article.cover_image} alt={article.cover_alt || title} fill style={{ objectFit: "cover" }} />
+                  <Image src={article.cover_image} alt={article.cover_alt || title} fill sizes="(max-width: 768px) 100vw, 50vw" style={{ objectFit: "cover" }} />
                     </div>
                   )}
                   <div style={{ padding: 32 }}>

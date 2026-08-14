@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import { Clock, Calendar, Info, AlertTriangle, CheckCircle2, ChevronRight, BookOpen } from "lucide-react";
 import type { Metadata } from "next";
@@ -12,8 +12,9 @@ import { ArticleEngagement } from "@/components/ArticleEngagement";
 import { AuthorCard } from "@/components/AuthorCard";
 import { getDefaultAuthor } from "@/lib/authors";
 import type { Article } from "@/lib/content-types";
+import { sanitizeRichText } from "@/lib/sanitize";
 
-export const revalidate = 3600;
+export const revalidate = 900;
 
 type BlogPostProps = {
   params: Promise<{ slug: string }>;
@@ -99,7 +100,7 @@ function getReferenceLines(blocks: ArticleBlock[]) {
 }
 
 function renderMarkdown(value: string | null | undefined) {
-  return marked(value || "") as string;
+  return sanitizeRichText(marked.parse(value || "") as string);
 }
 
 const englishUnavailableContent = `## English version coming soon
@@ -194,11 +195,18 @@ export async function generateMetadata({ params, searchParams }: BlogPostProps):
   const article = await getArticleBySlug(resolvedParams.slug);
   if (!article) return { title: "Not Found" };
 
+  const canonicalPath = `/blog/${article.slug}`;
   const hasEnglish = hasUsableEnglish(article);
+  if (isEn && !hasEnglish) {
+    return {
+      title: `${article.title_pt} | Saúde em Foco`,
+      alternates: { canonical: canonicalPath },
+      robots: { index: false, follow: true },
+    };
+  }
   const title = getLocalizedTitle(article, isEn, hasEnglish);
   const content = getLocalizedContent(article, isEn, hasEnglish);
   const description = getMetaDescription(getContentForMetadata(content, article.slug));
-  const canonicalPath = `/blog/${article.slug}`;
   const image = getArticleImage(article.cover_image);
 
   // Gera keywords baseadas na categoria e título do artigo
@@ -217,10 +225,12 @@ export async function generateMetadata({ params, searchParams }: BlogPostProps):
     keywords: baseKeywords,
     alternates: {
       canonical: canonicalPath,
-      languages: {
-        "pt-BR": canonicalPath,
-        "en-US": `${canonicalPath}?lang=en`,
-      },
+      languages: hasEnglish
+        ? {
+            "pt-BR": canonicalPath,
+            "en-US": `${canonicalPath}?lang=en`,
+          }
+        : { "pt-BR": canonicalPath },
     },
     openGraph: {
       title,
@@ -285,6 +295,7 @@ export default async function BlogPost({
   if (!article) notFound();
 
   const hasEnglish = hasUsableEnglish(article);
+  if (isEn && !hasEnglish) permanentRedirect(`/blog/${slug}`);
   const title = getLocalizedTitle(article, isEn, hasEnglish);
   const coverAlt = article.cover_alt || title;
   const catName = isEn && article.cat_name_en ? article.cat_name_en : article.cat_name_pt;
@@ -533,7 +544,7 @@ export default async function BlogPost({
 
         {article.cover_image && (
           <div style={{ width: '100%', height: 460, position: 'relative', borderRadius: 24, overflow: 'hidden', marginBottom: 48, boxShadow: '0 12px 32px rgba(0,0,0,0.1)' }}>
-            <Image src={article.cover_image} alt={coverAlt} fill style={{ objectFit: 'cover' }} priority />
+            <Image src={article.cover_image} alt={coverAlt} fill sizes="(max-width: 768px) 100vw, 860px" style={{ objectFit: 'cover' }} priority />
           </div>
         )}
 
@@ -544,7 +555,7 @@ export default async function BlogPost({
               <Info size={28} />
               <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Resumo em 30 segundos</h3>
             </div>
-            <div dangerouslySetInnerHTML={{ __html: quickAnswerBlock.isHtml ? (quickAnswerBlock.content || "") : renderMarkdown(quickAnswerBlock.content) }} style={{ fontSize: '1.25rem', lineHeight: 1.8 }} />
+            <div dangerouslySetInnerHTML={{ __html: quickAnswerBlock.isHtml ? sanitizeRichText(quickAnswerBlock.content || "") : renderMarkdown(quickAnswerBlock.content) }} style={{ fontSize: '1.25rem', lineHeight: 1.8 }} />
           </div>
         )}
 
@@ -584,7 +595,7 @@ export default async function BlogPost({
                          <AlertTriangle size={28} />
                          <h2 style={{ fontSize: '1.75rem', color: '#991b1b', margin: 0 }}>{block.title}</h2>
                        </div>
-                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : renderMarkdown(block.content) }} />
+                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? sanitizeRichText(block.content || "") : renderMarkdown(block.content) }} />
                      </div>
                    );
                  }
@@ -597,7 +608,7 @@ export default async function BlogPost({
                          <CheckCircle2 size={28} />
                          <h2 style={{ fontSize: '1.75rem', color: '#0f766e', margin: 0 }}>{block.title}</h2>
                        </div>
-                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : renderMarkdown(block.content) }} />
+                       <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? sanitizeRichText(block.content || "") : renderMarkdown(block.content) }} />
                      </div>
                    );
                  }
@@ -634,7 +645,7 @@ export default async function BlogPost({
                  return (
                    <div key={i} id={sectionId} style={{ marginBottom: 48 }}>
                      <SectionHeader preTitle={preTitle} title={block.title ?? ''} />
-                     <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? (block.content || "") : renderMarkdown(block.content) }} />
+                     <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? sanitizeRichText(block.content || "") : renderMarkdown(block.content) }} />
                    </div>
                  );
               })}

@@ -96,9 +96,11 @@ export function ConsentCenter() {
     return false;
   };
 
-  const acceptAll = async () => {
-    const notifications = await requestNotifications();
-    saveAllConsent(notifications);
+  const acceptAll = () => {
+    // A browser notification permission is separate from cookie consent and
+    // must only be requested after the visitor explicitly selects it.
+    saveAllConsent(false);
+    localStorage.setItem(NOTIFICATION_CONSENT_KEY, "dismissed");
     setShowSettings(false);
     setShowCookieNotice(false);
   };
@@ -145,7 +147,7 @@ export function ConsentCenter() {
             recusar ou configurar preferências de estatísticas, marketing, idioma, favoritos e notificações.
           </p>
           <div className="consent-actions">
-            <button type="button" className="btn btn-primary" onClick={() => void acceptAll()}>
+            <button type="button" className="btn btn-primary" onClick={acceptAll}>
               Aceitar
             </button>
             <button type="button" className="btn btn-secondary" onClick={declineOptional}>
