@@ -17,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = settings.title || siteName;
   const description = settings.description || siteDescription;
   const logo = settings.logo || "/logo.png";
+  const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
 
   return {
     metadataBase: new URL(siteUrl),
@@ -62,6 +63,11 @@ export async function generateMetadata(): Promise<Metadata> {
     authors: [{ name: title, url: siteUrl }],
     creator: title,
     publisher: title,
+    verification: googleSiteVerification
+      ? {
+          google: googleSiteVerification,
+        }
+      : undefined,
   };
 }
 
