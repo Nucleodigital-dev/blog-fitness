@@ -9,14 +9,10 @@ export const defaultSiteSettings: SiteSettings = {
   footerDescription: "Os melhores artigos sobre saúde, fitness e bem-estar. Transforme seu corpo e mente.",
   contactEmail,
   navigationItems: [
-    { label: "Início", href: "/" },
     { label: "Nutrição Fitness", categorySlug: "nutricao-fitness" },
     { label: "Treino Fitness", categorySlug: "treino-fitness" },
     { label: "Mentalidade e Hábitos", categorySlug: "mentalidade-habitos" },
     { label: "Suplementação e Recuperação", categorySlug: "suplementacao-recuperacao" },
-    { label: "Equipe editorial", href: "/quem-escreve" },
-    { label: "Sobre", href: "/sobre" },
-    { label: "Contato", href: "/contato" },
   ],
   footerColumns: [
     {
