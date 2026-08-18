@@ -14,7 +14,7 @@ import { getDefaultAuthor } from "@/lib/authors";
 import type { Article } from "@/lib/content-types";
 import { sanitizeRichText } from "@/lib/sanitize";
 
-export const revalidate = 900;
+// revalidate removido: conflitava com o uso de searchParams (causava DYNAMIC_SERVER_USAGE)
 
 type BlogPostProps = {
   params: Promise<{ slug: string }>;
