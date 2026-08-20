@@ -100,7 +100,8 @@ function getReferenceLines(blocks: ArticleBlock[]) {
 }
 
 function renderMarkdown(value: string | null | undefined) {
-  return sanitizeRichText(marked.parse(value || "") as string);
+  const cleaned = (value || "").replace(/^#{1,6}[ \t]*$/gm, "");
+    return sanitizeRichText(marked.parse(cleaned) as string);
 }
 
 const englishUnavailableContent = `## English version coming soon
@@ -589,11 +590,12 @@ export default async function BlogPost({
 
                  // Warning box (Red Flags / O que evitar)
                  if (block.type === 'red_flags' || block.type === 'what_to_avoid') {
+                                 const rfTitle = (block.title && block.title.trim()) || (lang === 'en' ? 'Warning signs' : 'Sinais de alerta');
                    return (
                      <div key={i} id={sectionId} style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: 32, borderRadius: 16, color: '#991b1b', marginBottom: 48 }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
                          <AlertTriangle size={28} />
-                         <h2 style={{ fontSize: '1.75rem', color: '#991b1b', margin: 0 }}>{block.title}</h2>
+                         <h2 style={{ fontSize: '1.75rem', color: '#991b1b', margin: 0 }}>{rfTitle}</h2>
                        </div>
                        <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? sanitizeRichText(block.content || "") : renderMarkdown(block.content) }} />
                      </div>
@@ -602,11 +604,12 @@ export default async function BlogPost({
 
                  // Checklists / Who is for
                  if (block.type === 'who_is_for' || block.type === 'checklist') {
+                                 const wiTitle = (block.title && block.title.trim()) || (lang === 'en' ? 'Is this for you?' : 'Para quem é isso?');
                    return (
                      <div key={i} id={sectionId} style={{ background: '#f0fdfa', border: '1px solid #ccfbf1', padding: 32, borderRadius: 16, color: '#0f766e', marginBottom: 48 }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
                          <CheckCircle2 size={28} />
-                         <h2 style={{ fontSize: '1.75rem', color: '#0f766e', margin: 0 }}>{block.title}</h2>
+                         <h2 style={{ fontSize: '1.75rem', color: '#0f766e', margin: 0 }}>{wiTitle}</h2>
                        </div>
                        <div className={`block-${block.type}`} dangerouslySetInnerHTML={{ __html: block.isHtml ? sanitizeRichText(block.content || "") : renderMarkdown(block.content) }} />
                      </div>
