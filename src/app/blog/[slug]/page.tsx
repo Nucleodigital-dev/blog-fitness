@@ -268,16 +268,19 @@ export async function generateStaticParams() {
 }
 
 // --- Premium Block Components ---
-const SectionHeader = ({ preTitle, title }: { preTitle: string, title: string }) => (
+const SectionHeader = ({ preTitle, title }: { preTitle: string, title: string }) => { const hasTitle = Boolean(title && title.trim().length > 0); return (
   <div style={{ margin: '56px 0 32px 0' }}>
-    <p style={{ margin: '0 0 8px 0', color: 'var(--primary)', fontSize: '1rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+    <p style={{ margin: hasTitle ? '0 0 8px 0' : 0, color: 'var(--primary)', fontSize: '1rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>
       {preTitle}
     </p>
-    <h2 style={{ margin: 0, fontSize: '2.5rem', lineHeight: 1.2, color: 'var(--foreground)' }}>
+    {hasTitle && (
+            <h2 style={{ margin: 0, fontSize: '2.5rem', lineHeight: 1.2, color: 'var(--foreground)' }}>
       {title}
     </h2>
+          )}
   </div>
 );
+                                                                                    };
 
 export default async function BlogPost({ 
   params,
