@@ -44,13 +44,28 @@ function stripMarkup(value: string) {
     .trim();
 }
 
-function parseBlocks(content: ArticleContent): ArticleBlock[] {
-  if (Array.isArray(content)) return content;
+function extractHeadingTitle(content: string | undefined | null) {
+    if (!content) return { title: undefined, content: content ?? undefined };
+    const match = content.match(/^\s*#{1,6}[ \t]+(.+?)[ \t]*(?:\n|$)/);
+    if (!match) return { title: undefined, content };
+    const extractedTitle = match[1].trim();
+    const remaining = content.slice(match[0].length).replace(/^\s+/, "");
+    return { title: extractedTitle, content: remaining };
+}
+function normalizeBlock(block: ArticleBlock): ArticleBlock {
+    if ((block.title && block.title.trim()) || block.isHtml) return block;
+    const extracted = extractHeadingTitle(block.content);
+    if (!extracted.title) return block;
+    return { ...block, title: extracted.title, content: extracted.content };
+}
+
+  function parseBlocks(content: ArticleContent): ArticleBlock[] {
+  if (Array.isArray(content)) return content.map(normalizeBlock);
   if (!content || typeof content !== "string" || !content.trim().startsWith("[")) return [];
 
   try {
     const blocks = JSON.parse(content);
-    return Array.isArray(blocks) ? blocks : [];
+          return Array.isArray(blocks) ? blocks.map(normalizeBlock) : [];
   } catch {
     return [];
   }
@@ -102,6 +117,22 @@ function getReferenceLines(blocks: ArticleBlock[]) {
 function renderMarkdown(value: string | null | undefined) {
   const cleaned = (value || "").replace(/^#{1,6}[ \t]*$/gm, "");
     return sanitizeRichText(marked.parse(cleaned) as string);
+}
+
+function makeExcerpt(value: string, maxLen: number) {
+    const plain = value
+      .replace(/<[^>]*>?/gm, " ")
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .replace(/_([^_]+)_/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/^#{1,6}[ \t]+/gm, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (plain.length <= maxLen) return plain;
+    const truncated = plain.slice(0, maxLen);
+    const lastSpace = truncated.lastIndexOf(" ");
+    return (lastSpace > 40 ? truncated.slice(0, lastSpace) : truncated).trim();
 }
 
 const englishUnavailableContent = `## English version coming soon
@@ -541,7 +572,7 @@ export default async function BlogPost({
           {quickAnswerBlock && (
             <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 32 }}>
               {/* Omitimos marcações HTML cruas do excerpt, apenas pegamos as primeiras palavras */}
-              {(quickAnswerBlock.content || "").replace(/<[^>]*>?/gm, '').substring(0, 200)}...
+              {makeExcerpt(quickAnswerBlock.content || "", 200)}...
             </p>
           )}
         </div>
