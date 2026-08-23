@@ -601,20 +601,23 @@ export default async function BlogPost({
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               
               {/* Sumário Clicável (Table of Contents) */}
-              {originalBlocks.length > 0 && otherBlocks.length > 0 && (
+{(() => { const tocEntries = otherBlocks.map((b, i) => ({ b, i })).filter(({ b }) => b.title && b.title.trim()); return (
+      originalBlocks.length > 0 && tocEntries.length > 0 && (
                 <div style={{ background: 'var(--card-bg)', padding: 32, borderRadius: 20, border: '1px solid var(--border)', marginBottom: 56 }}>
                   <p style={{ fontWeight: 800, marginBottom: 20, fontSize: '1.25rem' }}>Neste artigo:</p>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {otherBlocks.map((b, i) => (
+                    {tocEntries.map(({ b, i }, idx) => (
                       <li key={i} style={{ margin: 0 }}>
                         <a href={`#block-${i}`} style={{ color: 'var(--primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, fontSize: '1.15rem' }}>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 600 }}>0{i+1}.</span> <span style={{ fontWeight: 500 }}>{b.title}</span>
+                                                      <span style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: 600 }}>0{idx+1}.</span> <span style={{ fontWeight: 500 }}>{b.title}</span>
                         </a>
                       </li>
                     ))}
                   </ul>
                 </div>
-              )}
+                    )
+      );
+        })()}
 
               {/* Renderização dos Blocos Dinâmicos */}
               {otherBlocks.map((block, i) => {
