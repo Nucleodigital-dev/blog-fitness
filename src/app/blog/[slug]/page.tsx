@@ -505,7 +505,7 @@ export default async function BlogPost({
         }
 
         .block-references {
-          background: #f8fafc;
+          background: #f8fafc; color: #1e293b;
           border: 1px solid var(--border);
           border-radius: 12px;
           padding: 24px;
