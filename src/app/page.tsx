@@ -27,17 +27,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-function getSidebarCategories(categories: Category[]) {
-  const mainCategorySlugs = [
-    "nutricao-fitness",
-    "treino-fitness",
-    "mentalidade-habitos",
-    "suplementacao-recuperacao",
-  ];
-
+function getSidebarCategories(categories: Category[], allArticles: Article[]) {
   return categories
-    .filter((cat) => mainCategorySlugs.includes(cat.slug))
-    .sort((a, b) => mainCategorySlugs.indexOf(a.slug) - mainCategorySlugs.indexOf(b.slug));
+    .map((cat) => ({ ...cat, articleCount: allArticles.filter((article) => article.category_id === cat.id).length }))
+    .filter((cat) => cat.articleCount > 0)
+    .sort((a, b) => b.articleCount - a.articleCount)
+    .slice(0, 4);
 }
 
 export default async function Home({
@@ -56,7 +51,7 @@ export default async function Home({
     getSitePage("home"),
   ]);
 
-  const sidebarCategories = getSidebarCategories(categories);
+  const sidebarCategories = getSidebarCategories(categories, allArticles);
 
   let displayedArticles = allArticles;
   let categoryName = "";
