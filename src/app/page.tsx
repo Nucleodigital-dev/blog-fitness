@@ -31,8 +31,7 @@ function getSidebarCategories(categories: Category[], allArticles: Article[]) {
   return categories
     .map((cat) => ({ ...cat, articleCount: allArticles.filter((article) => article.category_id === cat.id).length }))
     .filter((cat) => cat.articleCount > 0)
-    .sort((a, b) => b.articleCount - a.articleCount)
-    .slice(0, 4);
+    .sort((a, b) => b.articleCount - a.articleCount);
 }
 
 export default async function Home({
