@@ -6,6 +6,17 @@ import { getAllAuthors } from "@/lib/authors";
 
 export const revalidate = 900;
 
+// Escapa caracteres especiais de XML para evitar sitemap.xml malformado
+// (ex.: URLs de imagens do Unsplash que contêm "&" em seus parametros de query)
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [articles, categories, publishedArticles] = await Promise.all([getSitemapArticles(), getCategories(), getAllArticles()]);
   const authors = getAllAuthors();
@@ -80,7 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       // Adiciona imagem de capa ao sitemap para indexação no Google Images
       if (article.cover_image) {
-        return { ...baseEntry, images: [absoluteUrl(article.cover_image)] };
+        return { ...baseEntry, images: [escapeXml(absoluteUrl(article.cover_image))] };
       }
 
       return baseEntry;
