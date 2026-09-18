@@ -1,5 +1,5 @@
 export const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://saudeemfoco.nucleodigitalofc.com"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://saudeemfocoofc.com"
 ).replace(/\/$/, "");
 
 export const siteName = "Saúde em Foco";
